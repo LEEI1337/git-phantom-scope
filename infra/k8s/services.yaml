@@ -1,0 +1,183 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gps-celery
+  namespace: git-phantom-scope
+  labels:
+    app.kubernetes.io/name: gps-celery
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gps-celery
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gps-celery
+        app.kubernetes.io/component: worker
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: celery
+          image: ghcr.io/leei1337/git-phantom-scope-backend:latest
+          command: ["celery", "-A", "app.celery_worker", "worker", "--loglevel=info", "--concurrency=4"]
+          envFrom:
+            - configMapRef:
+                name: gps-config
+            - secretRef:
+                name: gps-secrets
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: gps-redis
+  namespace: git-phantom-scope
+  labels:
+    app.kubernetes.io/name: gps-redis
+    app.kubernetes.io/component: cache
+spec:
+  serviceName: gps-redis
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gps-redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gps-redis
+        app.kubernetes.io/component: cache
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          args: ["--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru", "--appendonly", "no"]
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gps-redis
+  namespace: git-phantom-scope
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gps-redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: gps-postgres
+  namespace: git-phantom-scope
+  labels:
+    app.kubernetes.io/name: gps-postgres
+    app.kubernetes.io/component: database
+spec:
+  serviceName: gps-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gps-postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gps-postgres
+        app.kubernetes.io/component: database
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: gps_analytics
+            - name: POSTGRES_USER
+              value: gps
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gps-secrets
+                  key: GPS_SESSION_SECRET_KEY
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "gps"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gps-postgres
+  namespace: git-phantom-scope
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gps-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP

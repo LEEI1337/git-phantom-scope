@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gps-config
+  namespace: git-phantom-scope
+  labels:
+    app.kubernetes.io/name: git-phantom-scope
+data:
+  GPS_ENVIRONMENT: "production"
+  GPS_LOG_LEVEL: "INFO"
+  GPS_CORS_ORIGINS: '["https://gitphantomscope.com"]'
+  GPS_REDIS_URL: "redis://gps-redis:6379/0"
+  GPS_CELERY_BROKER_URL: "redis://gps-redis:6379/1"
+  GPS_CELERY_RESULT_BACKEND: "redis://gps-redis:6379/2"
+  GPS_DATABASE_URL: "postgresql+asyncpg://gps:changeme@gps-postgres:5432/gps_analytics"
+  GPS_ENABLE_PROMETHEUS: "true"
+  GPS_RATE_LIMIT_ANALYZE: "10"
+  GPS_RATE_LIMIT_GENERATE: "20"
+  GPS_RATE_LIMIT_API: "60"
+  GPS_REDIS_SESSION_TTL: "1800"
+  GPS_REDIS_CACHE_TTL: "900"
+  GPS_ASSET_TTL: "14400"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gps-secrets
+  namespace: git-phantom-scope
+  labels:
+    app.kubernetes.io/name: git-phantom-scope
+type: Opaque
+stringData:
+  GPS_SESSION_SECRET_KEY: "CHANGE-ME-IN-PRODUCTION-USE-RANDOM-32-BYTES"
+  GPS_GITHUB_TOKEN: ""
+  GPS_BYOK_ENCRYPTION_KEY: "CHANGE-ME-AES256-KEY-BASE64"
+  GPS_STRIPE_SECRET_KEY: ""
+  GPS_STRIPE_WEBHOOK_SECRET: ""
+  GPS_GEMINI_SHARED_KEY: ""
