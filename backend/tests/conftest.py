@@ -7,8 +7,9 @@ from unittest.mock import AsyncMock
 import fakeredis.aioredis
 import pytest
 from httpx import ASGITransport, AsyncClient
+from pydantic import SecretStr
 
-from app.config import Settings
+from app.config import Environment, Settings
 from app.main import create_app
 
 
@@ -24,12 +25,12 @@ def event_loop():
 def test_settings() -> Settings:
     """Provide test settings with safe defaults."""
     return Settings(
-        environment="testing",
+        environment=Environment.TESTING,
         debug=True,
         database_url="postgresql+asyncpg://test:test@localhost:5432/gps_test",
         redis_url="redis://localhost:6379/15",
-        github_token="ghp_test_token_fake_value",
-        session_secret_key="test-secret-key-minimum-32-chars-long!!",
+        github_token=SecretStr("ghp_test_token_fake_value"),
+        session_secret_key=SecretStr("test-secret-key-minimum-32-chars-long!!"),
         cors_origins=["http://localhost:3000"],
     )
 
@@ -40,7 +41,7 @@ async def fake_redis() -> AsyncGenerator:
     server = fakeredis.FakeServer()
     redis = fakeredis.aioredis.FakeRedis(server=server)
     yield redis
-    await redis.aclose()
+    await redis.close()
 
 
 @pytest.fixture

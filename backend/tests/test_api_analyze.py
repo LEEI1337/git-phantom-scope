@@ -28,7 +28,7 @@ async def api_client():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
-    await fake_redis.aclose()
+    await fake_redis.close()
     app.dependency_overrides.clear()
 
 
