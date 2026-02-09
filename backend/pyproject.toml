@@ -1,0 +1,49 @@
+[project]
+name = "git-phantom-scope"
+version = "0.1.0"
+description = "Privacy-First GitHub Profile Intelligence & AI-Powered Visual Identity Platform"
+readme = "README.md"
+license = {text = "BSL-1.1"}
+requires-python = ">=3.12"
+authors = [{name = "LEEI1337"}]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+fix = true
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "S",    # flake8-bandit
+    "A",    # flake8-builtins
+    "C4",   # flake8-comprehensions
+    "RET",  # flake8-return
+    "SIM",  # flake8-simplify
+]
+ignore = ["S101", "S104", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S106"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.bandit]
+skips = ["B101"]

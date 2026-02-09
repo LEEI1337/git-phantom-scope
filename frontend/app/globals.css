@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gps-bg: #0D1117;
+  --gps-surface: #161B22;
+  --gps-border: #30363D;
+  --gps-text: #C9D1D9;
+  --gps-accent: #58A6FF;
+  --gps-green: #238636;
+}
+
+body {
+  background-color: var(--gps-bg);
+  color: var(--gps-text);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gps-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gps-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gps-accent);
+}

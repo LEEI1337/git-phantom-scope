@@ -1,0 +1,16 @@
+# Prometheus Configuration for Git Phantom Scope
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'gps-backend'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['gps-backend:8000']
+        labels:
+          service: 'backend'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

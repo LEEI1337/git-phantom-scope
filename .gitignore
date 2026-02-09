@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Node.js
+node_modules/
+.next/
+out/
+
+# Docker volumes
+gps-postgres-data/
+gps-redis-data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test / Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# MLflow
+mlruns/
+mlflow.db
+
+# Generated assets (temp)
+generated_assets/
+
+# Logs
+*.log
+logs/
+
+# Local-only directories
+archive/
+memory-bank/
+.mcp-debug-tools/
+.mcp.json

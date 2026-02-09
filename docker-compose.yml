@@ -1,0 +1,170 @@
+# Git Phantom Scope - Docker Compose Development Environment
+# All services use gps- prefix per project conventions
+
+services:
+  # FastAPI Backend
+  gps-backend:
+    build:
+      context: ./backend
+      dockerfile: ../infra/docker/Dockerfile.backend
+    container_name: gps-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GPS_ENVIRONMENT=development
+      - GPS_DEBUG=true
+      - GPS_DATABASE_URL=postgresql+asyncpg://gps:gps_dev_password@gps-postgres:5432/gps_analytics
+      - GPS_REDIS_URL=redis://gps-redis:6379/0
+      - GPS_CELERY_BROKER_URL=redis://gps-redis:6379/1
+      - GPS_CELERY_RESULT_BACKEND=redis://gps-redis:6379/2
+      - GPS_S3_ENDPOINT=http://gps-minio:9000
+      - GPS_MLFLOW_TRACKING_URI=http://gps-mlflow:5000
+    volumes:
+      - ./backend:/app
+    depends_on:
+      gps-postgres:
+        condition: service_healthy
+      gps-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - gps-network
+
+  # Next.js Frontend
+  gps-frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../infra/docker/Dockerfile.frontend
+    container_name: gps-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NODE_ENV=development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - gps-backend
+    restart: unless-stopped
+    networks:
+      - gps-network
+
+  # PostgreSQL (Analytics ONLY - NO PII)
+  gps-postgres:
+    image: postgres:16-alpine
+    container_name: gps-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=gps
+      - POSTGRES_PASSWORD=gps_dev_password
+      - POSTGRES_DB=gps_analytics
+    volumes:
+      - gps-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gps -d gps_analytics"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - gps-network
+
+  # Redis (Sessions, Cache, Rate Limiting)
+  gps-redis:
+    image: redis:7-alpine
+    container_name: gps-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - gps-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - gps-network
+
+  # Celery Worker (Background Generation Jobs)
+  gps-celery:
+    build:
+      context: ./backend
+      dockerfile: ../infra/docker/Dockerfile.backend
+    container_name: gps-celery
+    command: celery -A app.celery_worker worker --loglevel=info --concurrency=2
+    environment:
+      - GPS_ENVIRONMENT=development
+      - GPS_DATABASE_URL=postgresql+asyncpg://gps:gps_dev_password@gps-postgres:5432/gps_analytics
+      - GPS_REDIS_URL=redis://gps-redis:6379/0
+      - GPS_CELERY_BROKER_URL=redis://gps-redis:6379/1
+      - GPS_CELERY_RESULT_BACKEND=redis://gps-redis:6379/2
+    volumes:
+      - ./backend:/app
+    depends_on:
+      gps-postgres:
+        condition: service_healthy
+      gps-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - gps-network
+
+  # MLflow (Prompt Versioning & Experiment Tracking)
+  gps-mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.17.0
+    container_name: gps-mlflow
+    ports:
+      - "5000:5000"
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
+    volumes:
+      - gps-mlflow-data:/mlflow
+    restart: unless-stopped
+    networks:
+      - gps-network
+
+  # Prometheus (Metrics)
+  gps-prometheus:
+    image: prom/prometheus:v2.54.0
+    container_name: gps-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - gps-prometheus-data:/prometheus
+    restart: unless-stopped
+    networks:
+      - gps-network
+
+  # Grafana (Dashboards)
+  gps-grafana:
+    image: grafana/grafana:11.2.0
+    container_name: gps-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - gps-grafana-data:/var/lib/grafana
+    depends_on:
+      - gps-prometheus
+    restart: unless-stopped
+    networks:
+      - gps-network
+
+volumes:
+  gps-postgres-data:
+  gps-redis-data:
+  gps-mlflow-data:
+  gps-prometheus-data:
+  gps-grafana-data:
+
+networks:
+  gps-network:
+    driver: bridge

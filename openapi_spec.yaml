@@ -1,0 +1,557 @@
+openapi: 3.0.3
+info:
+  title: GitProfileAI API
+  description: |
+    Privacy-First GitHub Profile Analysis & AI-Powered Infographic Generation Platform
+
+    **Features:**
+    - Analyze public GitHub profiles without registration
+    - Generate personalized profile packages (README, banners, covers)
+    - Bring Your Own Key (BYOK) for all major AI providers
+    - Zero PII storage, only anonymous aggregated statistics
+    - AI code usage detection and visualization
+  version: 1.0.0
+  contact:
+    name: GitProfileAI Team
+    email: api@gitprofileai.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.gitprofileai.com/v1
+    description: Production API
+  - url: https://staging-api.gitprofileai.com/v1
+    description: Staging API
+  - url: http://localhost:4000/v1
+    description: Local Development
+
+tags:
+  - name: Analysis
+    description: GitHub profile analysis endpoints
+  - name: Generation
+    description: Infographic and package generation
+  - name: Keys
+    description: BYOK key management and validation
+  - name: Insights
+    description: Public aggregated statistics
+  - name: Health
+    description: System health checks
+
+paths:
+  /public/analyze:
+    post:
+      tags:
+        - Analysis
+      summary: Analyze a GitHub profile
+      description: |
+        Analyzes a public GitHub profile and returns metrics, scores, 
+        AI usage estimation, and archetype classification.
+
+        **Rate Limits (Free):** 3 requests per day per IP
+      operationId: analyzeProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - github_username
+              properties:
+                github_username:
+                  type: string
+                  example: "torvalds"
+                  description: GitHub username to analyze
+                preferences:
+                  type: object
+                  properties:
+                    career_goal:
+                      type: string
+                      example: "AI Engineer at Startup"
+                      description: Optional career positioning
+                    style:
+                      type: string
+                      enum: [minimal, colorful, professional, dark, cyberpunk]
+                      example: minimal
+                    colors:
+                      type: array
+                      items:
+                        type: string
+                        pattern: '^#[0-9A-Fa-f]{6}$'
+                      example: ["#1a1a1a", "#00ff88"]
+                      maxItems: 5
+                byok:
+                  type: object
+                  description: Encrypted API keys (client-side encryption)
+                  properties:
+                    gemini_key:
+                      type: string
+                      example: "encrypted_base64_string"
+                    openai_key:
+                      type: string
+                    anthropic_key:
+                      type: string
+      responses:
+        '200':
+          description: Analysis successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: GitHub user not found
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /public/generate:
+    post:
+      tags:
+        - Generation
+      summary: Generate profile package
+      description: |
+        Creates a complete profile package with README, banners, and cover images.
+        Returns a job ID for async processing.
+      operationId: generatePackage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - session_id
+                - template_id
+              properties:
+                session_id:
+                  type: string
+                  format: uuid
+                  description: Session ID from analyze endpoint
+                template_id:
+                  type: string
+                  enum: 
+                    - portfolio_card
+                    - skill_wheel
+                    - contribution_heatmap
+                    - business_strategy
+                    - creative_poster
+                  example: portfolio_card
+                model_preferences:
+                  type: object
+                  properties:
+                    text_model:
+                      type: string
+                      enum: [gemini-pro, gpt-4o, claude-3-opus]
+                      example: gemini-pro
+                    image_model:
+                      type: string
+                      enum: [gemini-imagen, dalle-3, sd-3.5, flux-schnell]
+                      example: gemini-imagen
+                assets:
+                  type: array
+                  items:
+                    type: string
+                    enum: [readme, banner, repo_covers, social_cards]
+                  example: ["readme", "banner", "repo_covers"]
+      responses:
+        '202':
+          description: Generation job queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [queued, processing]
+                  estimated_time_seconds:
+                    type: integer
+                    example: 45
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Session not found or expired
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /public/generate/{job_id}:
+    get:
+      tags:
+        - Generation
+      summary: Get generation job status
+      operationId: getGenerationStatus
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationStatusResponse'
+        '404':
+          description: Job not found
+
+  /keys/validate:
+    post:
+      tags:
+        - Keys
+      summary: Validate BYOK API key
+      description: Validates user-provided API key and returns tier information
+      operationId: validateKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - provider
+                - api_key
+              properties:
+                provider:
+                  type: string
+                  enum: [gemini, openai, anthropic, replicate]
+                api_key:
+                  type: string
+                  description: Encrypted API key
+      responses:
+        '200':
+          description: Validation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyValidationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid API key
+
+  /public/insights:
+    get:
+      tags:
+        - Insights
+      summary: Get aggregated public statistics
+      description: Returns anonymized, aggregated data about AI usage trends
+      operationId: getInsights
+      parameters:
+        - name: metric
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - ai_usage_by_language
+              - ai_tools_distribution
+              - archetype_distribution
+              - tech_stack_trends
+          example: ai_usage_by_language
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, 1y]
+            default: 30d
+        - name: language
+          in: query
+          description: Filter by programming language
+          schema:
+            type: string
+            example: TypeScript
+      responses:
+        '200':
+          description: Insights retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightsResponse'
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        '200':
+          description: System healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  version:
+                    type: string
+                    example: 1.0.0
+                  services:
+                    type: object
+                    properties:
+                      database:
+                        type: string
+                        enum: [ok, degraded, down]
+                      cache:
+                        type: string
+                        enum: [ok, degraded, down]
+                      github_api:
+                        type: string
+                        enum: [ok, degraded, down]
+
+components:
+  schemas:
+    AnalysisResponse:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        profile:
+          type: object
+          properties:
+            username:
+              type: string
+            name:
+              type: string
+            avatar_url:
+              type: string
+            bio:
+              type: string
+            stats:
+              type: object
+              properties:
+                repos:
+                  type: integer
+                followers:
+                  type: integer
+                following:
+                  type: integer
+                contributions_last_year:
+                  type: integer
+        scores:
+          type: object
+          properties:
+            activity:
+              type: integer
+              minimum: 0
+              maximum: 100
+            collaboration:
+              type: integer
+              minimum: 0
+              maximum: 100
+            stack_diversity:
+              type: integer
+              minimum: 0
+              maximum: 100
+            ai_savviness:
+              type: integer
+              minimum: 0
+              maximum: 100
+        archetype:
+          type: string
+          enum:
+            - ai_indie_hacker
+            - fullstack_generalist
+            - devops_expert
+            - data_scientist
+            - frontend_specialist
+            - backend_architect
+        tech_profile:
+          type: object
+          properties:
+            languages:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  percentage:
+                    type: number
+                  lines_of_code:
+                    type: integer
+            frameworks:
+              type: array
+              items:
+                type: string
+            top_repos:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  stars:
+                    type: integer
+                  language:
+                    type: string
+        ai_analysis:
+          type: object
+          properties:
+            overall_bucket:
+              type: string
+              enum: ["0_10", "10_30", "30_60", "60_100"]
+            confidence:
+              type: string
+              enum: [low, medium, high]
+            by_language:
+              type: object
+              additionalProperties:
+                type: string
+            detected_tools:
+              type: array
+              items:
+                type: string
+                enum: [github_copilot, chatgpt, claude, gemini, cursor]
+
+    GenerationStatusResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        download_url:
+          type: string
+          description: Available when status is completed
+        expires_at:
+          type: string
+          format: date-time
+        assets:
+          type: object
+          properties:
+            readme:
+              type: string
+            banner:
+              type: string
+            repo_covers:
+              type: array
+              items:
+                type: string
+            social_cards:
+              type: array
+              items:
+                type: string
+        error:
+          type: object
+          description: Present only when status is failed
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+    KeyValidationResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        provider:
+          type: string
+        tier:
+          type: string
+          enum: [free, pro, enterprise]
+        rate_limits:
+          type: object
+          properties:
+            requests_per_minute:
+              type: integer
+            requests_per_day:
+              type: integer
+        features:
+          type: object
+          properties:
+            text_generation:
+              type: boolean
+            image_generation:
+              type: boolean
+            max_image_size:
+              type: string
+
+    InsightsResponse:
+      type: object
+      properties:
+        metric:
+          type: string
+        period:
+          type: string
+        filters:
+          type: object
+        data:
+          type: array
+          items:
+            type: object
+        sample_size:
+          type: integer
+        updated_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Optional for public endpoints, required for enterprise
+
+security: []

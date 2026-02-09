@@ -1,0 +1,77 @@
+# index.txt - Git Phantom Scope File Index
+# Auto-generated project file listing
+# Last updated: 2025-08-17
+
+## Root
+- README.md                     # Project README with full documentation
+- ROADMAP.md                    # 6-phase development roadmap
+- TODO.md                       # Active task tracking
+- LICENSE                       # BSL-1.1 license
+- .env.example                  # Environment variable template
+- .gitignore                    # Git ignore rules
+- docker-compose.yml            # Full dev environment (8 services)
+- gitprofileai_complete_spec.md # Complete project specification
+- openapi_spec.yaml             # OpenAPI 3.0 specification
+- architecture_diagrams_plantuml.md # PlantUML architecture diagrams
+
+## Backend
+- backend/alembic.ini                          # Alembic configuration
+- backend/requirements.txt                     # Python dependencies
+- backend/requirements-test.txt                # Test dependencies
+- backend/pyproject.toml                       # Tool configs (ruff, mypy, pytest)
+- backend/app/__init__.py                      # Package init
+- backend/app/config.py                        # Pydantic Settings
+- backend/app/main.py                          # FastAPI application factory
+- backend/app/dependencies.py                  # Redis pool, rate limiters
+- backend/app/exceptions.py                    # Custom exception hierarchy
+- backend/app/logging_config.py                # structlog setup
+- backend/app/metrics.py                       # Prometheus metrics
+- backend/api/deps.py                          # API dependencies
+- backend/api/v1/router.py                     # Route aggregation
+- backend/api/v1/routes/analyze.py             # POST /analyze
+- backend/api/v1/routes/generate.py            # POST /generate
+- backend/api/v1/routes/keys.py                # POST /keys/validate
+- backend/api/v1/routes/insights.py            # GET /insights
+- backend/db/session.py                        # Async SQLAlchemy engine
+- backend/db/models.py                         # Analytics models
+- backend/db/migrations/env.py                 # Alembic env
+- backend/db/migrations/script.py.mako         # Migration template
+- backend/db/migrations/versions/001_initial.py # Initial migration
+- backend/services/github_service.py           # GitHub API integration
+- backend/services/scoring_engine.py           # 4-dimension scoring
+- backend/services/prompt_orchestrator.py      # AI prompt templates
+- backend/services/model_connector.py          # Multi-model BYOK
+- backend/services/packager.py                 # Asset rendering/packaging
+- backend/skills/base.py                       # Skill base classes
+- backend/skills/registry.py                   # Skill registry
+- backend/gateway/session.py                   # Session manager
+- backend/gateway/health.py                    # Health monitor
+- backend/tests/conftest.py                    # Test fixtures
+- backend/tests/test_scoring_engine.py         # Scoring tests
+- backend/tests/test_github_service.py         # GitHub service tests
+- backend/tests/test_api_analyze.py            # API endpoint tests
+
+## Frontend
+- frontend/package.json         # Dependencies
+- frontend/tsconfig.json        # TypeScript config
+- frontend/next.config.js       # Next.js config
+- frontend/tailwind.config.js   # Tailwind theme
+- frontend/postcss.config.js    # PostCSS config
+- frontend/app/layout.tsx       # Root layout
+- frontend/app/globals.css      # Global styles
+- frontend/app/page.tsx         # Landing page
+- frontend/lib/api.ts           # Typed API client
+
+## Infrastructure
+- infra/docker/Dockerfile.backend   # Backend Docker image
+- infra/docker/Dockerfile.frontend  # Frontend Docker image
+- infra/prometheus/prometheus.yml   # Prometheus scrape config
+
+## Documentation
+- docs/api/README.md            # API reference
+- docs/architecture/README.md   # Architecture overview
+
+## Config
+- .mcp.json                     # MCP servers config
+- .github/copilot-instructions.md # Copilot agent instructions
+- .github/prompts/              # 10 Copilot skill prompts
