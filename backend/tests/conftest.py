@@ -24,13 +24,13 @@ def event_loop():
 def test_settings() -> Settings:
     """Provide test settings with safe defaults."""
     return Settings(
-        GPS_ENVIRONMENT="testing",
-        GPS_DEBUG=True,
-        GPS_DATABASE_URL="postgresql+asyncpg://test:test@localhost:5432/gps_test",
-        GPS_REDIS_URL="redis://localhost:6379/15",
-        GPS_GITHUB_TOKEN="ghp_test_token_fake_value",
-        GPS_SECRET_KEY="test-secret-key-minimum-32-chars-long!!",
-        GPS_CORS_ORIGINS="http://localhost:3000",
+        environment="testing",
+        debug=True,
+        database_url="postgresql+asyncpg://test:test@localhost:5432/gps_test",
+        redis_url="redis://localhost:6379/15",
+        github_token="ghp_test_token_fake_value",
+        session_secret_key="test-secret-key-minimum-32-chars-long!!",
+        cors_origins=["http://localhost:3000"],
     )
 
 
@@ -62,24 +62,40 @@ async def client(app) -> AsyncGenerator:
 def mock_github_service():
     """Provide a mocked GitHub service."""
     service = AsyncMock()
-    service.fetch_profile.return_value = {
-        "login": "testuser",
+    service.get_profile.return_value = {
+        "username": "testuser",
+        "name": "Test User",
+        "avatar_url": "https://example.com/avatar.png",
         "public_repos": 42,
         "followers": 100,
         "following": 50,
         "created_at": "2020-01-01T00:00:00Z",
+        "bio": "Developer",
+        "repos": [
+            {
+                "name": "test-repo",
+                "language": "Python",
+                "stargazers_count": 10,
+                "forks_count": 3,
+                "fork": False,
+                "topics": ["python", "api"],
+                "updated_at": "2026-01-15T12:00:00Z",
+            },
+        ],
+        "events": [
+            {"type": "PushEvent", "created_at": "2025-08-01T12:00:00Z"},
+            {"type": "PullRequestEvent", "created_at": "2025-08-02T12:00:00Z"},
+        ],
+        "languages": {"Python": 80.0},
+        "total_stars": 10,
+        "total_forks": 3,
+        "topics": ["python", "api"],
+        "pinned_repos": [],
+        "organizations": [],
+        "contribution_calendar": [],
     }
-    service.fetch_repos.return_value = [
-        {
-            "name": "test-repo",
-            "language": "Python",
-            "stargazers_count": 10,
-            "forks_count": 3,
-            "topics": ["python", "api"],
-        },
+    service.get_commit_history.return_value = [
+        {"message": "feat: add feature", "author_login": "testuser"},
     ]
-    service.fetch_events.return_value = [
-        {"type": "PushEvent", "created_at": "2025-08-01T12:00:00Z"},
-        {"type": "PullRequestEvent", "created_at": "2025-08-02T12:00:00Z"},
-    ]
+    service.invalidate_cache.return_value = 0
     return service

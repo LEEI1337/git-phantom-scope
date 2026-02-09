@@ -57,6 +57,9 @@ class AnalyzeResponse(BaseModel):
     archetype: dict
     ai_analysis: dict
     tech_profile: dict
+    contribution_calendar: list[dict] = []
+    pinned_repos: list[dict] = []
+    organizations: list[dict] = []
     meta: dict
 
 
@@ -88,9 +91,24 @@ async def analyze_profile(
     github_service = GitHubService(redis)
     profile = await github_service.get_profile(request.github_username)
 
-    # Score profile
+    # Fetch commit history from top repos for AI detection
+    commit_data: list[dict] = []
+    top_repos = sorted(
+        profile.get("repos", []),
+        key=lambda r: r.get("stars", 0),
+        reverse=True,
+    )[:5]
+    for repo in top_repos:
+        repo_name = repo.get("name", "")
+        if repo_name and not repo.get("is_fork", False):
+            commits = await github_service.get_commit_history(
+                request.github_username, repo_name, count=30
+            )
+            commit_data.extend(commits)
+
+    # Score profile with commit analysis
     scoring_engine = ScoringEngine()
-    scoring_result = scoring_engine.score_profile(profile)
+    scoring_result = scoring_engine.score_profile(profile, commit_data or None)
 
     # Create session
     session_id = str(uuid.uuid4())
@@ -108,6 +126,14 @@ async def analyze_profile(
         json.dumps(session_data),
     )
 
+    # Determine total contributions (prefer GraphQL data)
+    contrib_stats = profile.get("contribution_stats", {})
+    total_contributions = (
+        contrib_stats.get("total_contributions_last_year")
+        or contrib_stats.get("total_commits", 0)
+        or contrib_stats.get("recent_commits", 0)
+    )
+
     # Build response
     response_data = {
         "session_id": session_id,
@@ -115,21 +141,34 @@ async def analyze_profile(
             "username": profile.get("username", ""),
             "avatar_url": profile.get("avatar_url", ""),
             "bio": profile.get("bio"),
+            "name": profile.get("name"),
+            "company": profile.get("company"),
+            "location": profile.get("location"),
+            "blog": profile.get("blog"),
+            "is_hireable": profile.get("is_hireable", False),
+            "created_at": profile.get("created_at"),
             "stats": {
                 "repos": profile.get("public_repos", 0),
                 "followers": profile.get("followers", 0),
-                "contributions_last_year": profile.get("contribution_stats", {}).get(
-                    "recent_commits", 0
-                ),
+                "following": profile.get("following", 0),
+                "contributions_last_year": total_contributions,
+                "total_commits": contrib_stats.get("total_commits", 0),
+                "total_prs": contrib_stats.get("total_prs", 0),
+                "total_issues": contrib_stats.get("total_issues", 0),
+                "total_reviews": contrib_stats.get("total_reviews", 0),
             },
         },
         "scores": scoring_result["scores"],
         "archetype": scoring_result["archetype"],
         "ai_analysis": scoring_result.get("ai_analysis", {}),
         "tech_profile": scoring_result.get("tech_profile", {}),
+        "contribution_calendar": profile.get("contribution_calendar", []),
+        "pinned_repos": profile.get("pinned_repos", []),
+        "organizations": profile.get("organizations", []),
         "meta": {
             "request_id": session_id,
             "cache_hit": False,
+            "data_source": "graphql" if profile.get("contribution_calendar") else "rest",
         },
     }
 
