@@ -28,13 +28,13 @@
 - [x] Rate limit handling with retry logic
 - [x] Integration tests with real GitHub data
 
-## Phase 3: Scoring & AI Detection (Weeks 5-6) - CURRENT
+## Phase 3: Scoring & AI Detection (Weeks 5-6) - COMPLETE
 
-- [ ] Refined scoring algorithms
-- [ ] AI code detection heuristics v2
-- [ ] Archetype classification tuning
-- [ ] Scoring unit tests (>90% coverage)
-- [ ] Anonymous analytics pipeline to PostgreSQL
+- [x] Refined scoring algorithms (V2: log scaling, time decay, Shannon entropy)
+- [x] AI code detection heuristics v2 (burst detection, Windsurf/Aider patterns)
+- [x] Archetype classification tuning (10 archetypes, weighted normalization, confidence)
+- [x] Scoring unit tests (>90% coverage - achieved 99%)
+- [x] Anonymous analytics pipeline to PostgreSQL
 
 ## Phase 4: Image Generation (Weeks 7-8)
 
@@ -67,4 +67,4 @@
 - [ ] Performance optimization & load testing
 
 ---
-*Last updated: 2026-02-17*
+*Last updated: 2026-02-18*

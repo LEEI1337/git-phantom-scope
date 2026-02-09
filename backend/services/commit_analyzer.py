@@ -1,13 +1,19 @@
-"""Commit Message Analyzer for AI Detection.
+"""Commit Message Analyzer for AI Detection V2.
 
 Analyzes commit messages, co-author tags, and commit patterns
 to detect AI-assisted code contributions.
+
+V2 additions:
+- Commit burst detection (rapid consecutive commits typical of AI-assisted dev)
+- Additional AI tool patterns (Windsurf, Aider, Supermaven)
+- Enhanced heuristic scoring
 
 Detects:
 - AI tool mentions (Copilot, ChatGPT, Cursor, etc.)
 - Co-authored-by bot tags (GitHub Copilot, dependabot, etc.)
 - AI-generated commit patterns (generic messages, bulk changes)
 - Automated tool signatures
+- Commit burst patterns
 
 PRIVACY: Analysis is done in-memory only. No commit data persisted.
 """
@@ -39,6 +45,8 @@ AI_TOOL_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\btabnine\b", re.IGNORECASE), "Tabnine"),
     (re.compile(r"\bcody\b", re.IGNORECASE), "Sourcegraph Cody"),
     (re.compile(r"\bsupermaven\b", re.IGNORECASE), "Supermaven"),
+    (re.compile(r"\bwindsurf\b", re.IGNORECASE), "Windsurf"),
+    (re.compile(r"\baider\b", re.IGNORECASE), "Aider"),
     (
         re.compile(r"\bai[- ]generated\b|\bai[- ]assisted\b|\bai[- ]powered\b", re.IGNORECASE),
         "AI-Assisted (generic)",
@@ -108,6 +116,7 @@ class CommitAnalysisResult:
     ai_confidence: str = "low"
     commits_with_ai_signals: int = 0
     ai_signal_details: list[dict[str, Any]] = field(default_factory=list)
+    burst_score: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to JSON-serializable dict."""
@@ -120,6 +129,7 @@ class CommitAnalysisResult:
             "ai_confidence": self.ai_confidence,
             "commits_with_ai_signals": self.commits_with_ai_signals,
             "detected_tools": sorted(self.ai_tool_mentions.keys()),
+            "burst_score": round(self.burst_score, 2),
             "ai_percentage": (
                 round(self.commits_with_ai_signals / self.total_commits_analyzed * 100, 1)
                 if self.total_commits_analyzed > 0
@@ -184,6 +194,9 @@ class CommitAnalyzer:
                 100.0,
             )
 
+        # Detect commit burst patterns (V2)
+        result.burst_score = self._detect_burst_patterns(commits)
+
         # Determine confidence level
         result.ai_confidence = self._determine_confidence(result)
 
@@ -218,5 +231,67 @@ class CommitAnalyzer:
                 return "medium"
             if result.ai_heuristic_score > 30:
                 return "medium"
+            if result.burst_score > 0.5:
+                return "medium"
 
         return "low"
+
+    def _detect_burst_patterns(self, commits: list[dict[str, Any]]) -> float:
+        """Detect commit burst patterns typical of AI-assisted development.
+
+        AI-assisted coding often produces rapid consecutive commits
+        with similar messages or very short intervals between them.
+
+        Returns a score from 0.0 to 1.0 indicating burst likelihood.
+        """
+        if len(commits) < 3:
+            return 0.0
+
+        # Extract timestamps and check for rapid sequences
+        timestamps: list[str] = []
+        for commit in commits:
+            dt = commit.get("committed_date", "")
+            if dt:
+                timestamps.append(dt)
+
+        burst_score = 0.0
+
+        # Check for rapid commit sequences (< 2 min apart)
+        if len(timestamps) >= 2:
+            rapid_pairs = 0
+            for i in range(len(timestamps) - 1):
+                try:
+                    t1 = timestamps[i][:19].replace("T", " ")
+                    t2 = timestamps[i + 1][:19].replace("T", " ")
+                    from datetime import datetime as dt_cls
+
+                    d1 = dt_cls.strptime(t1, "%Y-%m-%d %H:%M:%S")
+                    d2 = dt_cls.strptime(t2, "%Y-%m-%d %H:%M:%S")
+                    diff = abs((d1 - d2).total_seconds())
+                    if diff < 120:  # < 2 minutes
+                        rapid_pairs += 1
+                except (ValueError, TypeError):
+                    continue
+
+            if len(timestamps) > 1:
+                burst_score += min(rapid_pairs / (len(timestamps) - 1), 0.5)
+
+        # Check for similar commit messages (repetitive patterns)
+        messages = [c.get("message", "").split("\n")[0] for c in commits]
+        if len(messages) >= 3:
+            # Count commits with identical prefixes (first 20 chars)
+            prefixes = [m[:20].lower() for m in messages if len(m) >= 20]
+            if prefixes:
+                from collections import Counter
+
+                prefix_counts = Counter(prefixes)
+                most_common_count = prefix_counts.most_common(1)[0][1]
+                if most_common_count >= 3:
+                    burst_score += 0.3
+
+        # Check for very high file change counts (AI tends to change many files)
+        high_change_commits = sum(1 for c in commits if c.get("changed_files", 0) > 20)
+        if commits:
+            burst_score += min(high_change_commits / len(commits), 0.2)
+
+        return min(burst_score, 1.0)

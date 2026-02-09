@@ -1,6 +1,6 @@
 # index.txt - Git Phantom Scope File Index
 # Auto-generated project file listing
-# Last updated: 2025-08-17
+# Last updated: 2026-02-18
 
 ## Root
 - README.md                     # Project README with full documentation
@@ -38,7 +38,9 @@
 - backend/db/migrations/script.py.mako         # Migration template
 - backend/db/migrations/versions/001_initial.py # Initial migration
 - backend/services/github_service.py           # GitHub API integration
-- backend/services/scoring_engine.py           # 4-dimension scoring
+- backend/services/scoring_engine.py           # 4-dimension scoring V2 (log scale, entropy, archetypes)
+- backend/services/commit_analyzer.py          # AI commit analysis V2 (burst detection)
+- backend/services/analytics_pipeline.py       # Anonymous analytics to PostgreSQL
 - backend/services/prompt_orchestrator.py      # AI prompt templates
 - backend/services/model_connector.py          # Multi-model BYOK
 - backend/services/packager.py                 # Asset rendering/packaging
@@ -47,7 +49,11 @@
 - backend/gateway/session.py                   # Session manager
 - backend/gateway/health.py                    # Health monitor
 - backend/tests/conftest.py                    # Test fixtures
-- backend/tests/test_scoring_engine.py         # Scoring tests
+- backend/tests/test_scoring_engine.py         # Scoring tests (13 tests)
+- backend/tests/test_scoring_engine_v2.py      # Scoring V2 tests (42 tests, 99% coverage)
+- backend/tests/test_commit_analyzer.py        # Commit analyzer tests (12 tests)
+- backend/tests/test_commit_analyzer_v2.py     # Burst detection tests (10 tests)
+- backend/tests/test_analytics_pipeline.py     # Analytics pipeline tests (8 tests)
 - backend/tests/test_github_service.py         # GitHub service tests
 - backend/tests/test_api_analyze.py            # API endpoint tests
 

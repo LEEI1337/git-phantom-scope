@@ -1,24 +1,30 @@
 # Git Phantom Scope - Active Tasks
 
-## Completed (Phase 2)
+## Completed (Phase 3)
 
 - [x] GitHub GraphQL integration (richer data)
 - [x] Commit message AI analysis + co-author parsing
 - [x] Contribution graph data
 - [x] Redis caching optimization (tiered TTLs, compression)
 - [x] Rate limit handling with retry logic (exponential backoff)
-- [x] Integration tests (51 tests, all passing)
+- [x] Integration tests (116 tests, all passing)
 - [x] Alembic migration setup
 - [x] Basic pytest suite for services
 - [x] GitHub Actions CI pipeline
+- [x] Scoring Engine V2 (log scaling, time decay, Shannon entropy, weighted normalization)
+- [x] Commit Analyzer V2 (burst detection, Windsurf/Aider patterns)
+- [x] 10 Archetypes with weighted scoring + confidence + alternatives
+- [x] Scoring tests >90% coverage (achieved 99%)
+- [x] Analytics pipeline service (AnalyticsPipeline)
 
-## Up Next (Phase 3: Scoring & AI Detection)
+## Up Next (Phase 4: Image Generation)
 
-- [ ] Refined scoring algorithms
-- [ ] AI code detection heuristics v2
-- [ ] Archetype classification tuning
-- [ ] Scoring unit tests (>90% coverage)
-- [ ] Anonymous analytics pipeline to PostgreSQL
+- [ ] Gemini Imagen integration (free tier)
+- [ ] Prompt orchestrator testing
+- [ ] Template system (portfolio banner, skill wheel)
+- [ ] Watermark service (PIL-based)
+- [ ] ZIP packaging & download flow
+- [ ] MVP Launch
 
 ## Backlog
 
@@ -35,4 +41,4 @@
 - [ ] API documentation site (docs/)
 
 ---
-*Last updated: 2026-02-17*
+*Last updated: 2026-02-18*
