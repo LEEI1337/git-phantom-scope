@@ -1,6 +1,6 @@
 # Git Phantom Scope - Development Roadmap
 
-## Phase 1: Foundation (Weeks 1-2) - CURRENT
+## Phase 1: Foundation (Weeks 1-2) - COMPLETE
 
 - [x] Project specification & architecture docs
 - [x] Repository setup, README, copilot instructions
@@ -14,11 +14,11 @@
 - [x] Gateway (session management, health monitoring)
 - [x] Docker Compose environment
 - [x] Frontend skeleton (Next.js 14, Tailwind, TypeScript)
-- [ ] Alembic migrations setup
-- [ ] Basic test suite
-- [ ] CI/CD pipeline (GitHub Actions)
+- [x] Alembic migrations setup
+- [x] Basic test suite (scoring, GitHub service, API endpoints)
+- [x] CI/CD pipeline (GitHub Actions)
 
-## Phase 2: GitHub Integration (Weeks 3-4)
+## Phase 2: GitHub Integration (Weeks 3-4) - CURRENT
 
 - [ ] GitHub GraphQL integration (richer data)
 - [ ] Commit message analysis for AI detection
