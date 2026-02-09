@@ -7,8 +7,6 @@ from the skills directory.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from app.logging_config import get_logger
 from skills.base import SkillBase, SkillContext, SkillResult, SkillStatus
 
@@ -33,7 +31,7 @@ class SkillRegistry:
             version=skill.metadata.version,
         )
 
-    def get(self, name: str) -> Optional[SkillBase]:
+    def get(self, name: str) -> SkillBase | None:
         """Get a skill by name."""
         return self._skills.get(name)
 

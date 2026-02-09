@@ -62,6 +62,9 @@ jobs:
       - name: Bandit security scan
         run: bandit -r app/ services/ api/ gateway/ skills/ -c pyproject.toml
 
+      - name: Dependency audit
+        run: pip-audit --strict --desc
+
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
@@ -95,7 +98,7 @@ jobs:
         env:
           GPS_ENVIRONMENT: testing
           GPS_REDIS_URL: redis://localhost:6379/15
-          GPS_SECRET_KEY: ci-test-secret-key-minimum-32-characters
+          GPS_SESSION_SECRET_KEY: ci-test-secret-key-minimum-32-characters
           GPS_DATABASE_URL: sqlite+aiosqlite:///test.db
         run: pytest --tb=short -q
 
@@ -113,10 +116,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: frontend/package.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts || npm install
+        run: npm ci --legacy-peer-deps
 
       - name: TypeScript type check
         run: npx tsc --noEmit
@@ -135,10 +138,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: frontend/package.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts || npm install
+        run: npm ci --legacy-peer-deps
 
       - name: Build
         run: npx next build

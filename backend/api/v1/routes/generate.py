@@ -9,10 +9,10 @@ from __future__ import annotations
 import json
 import uuid
 
+import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, Path
 from pydantic import BaseModel, Field
 
-import redis.asyncio as aioredis
 from api.deps import rate_limit_generate
 from app.config import get_settings
 from app.dependencies import get_redis
@@ -31,10 +31,12 @@ class GenerateRequest(BaseModel):
     model_preferences: dict | None = Field(
         None,
         description="Model preferences for generation",
-        examples=[{
-            "text_model": "gemini-pro",
-            "image_model": "gemini-imagen",
-        }],
+        examples=[
+            {
+                "text_model": "gemini-pro",
+                "image_model": "gemini-imagen",
+            }
+        ],
     )
     assets: list[str] = Field(
         default=["readme", "banner"],

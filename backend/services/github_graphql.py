@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import random
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
@@ -208,7 +208,7 @@ class GitHubGraphQLClient:
     GraphQL API has no unauthenticated access.
     """
 
-    def __init__(self, token: Optional[str] = None) -> None:
+    def __init__(self, token: str | None = None) -> None:
         settings = get_settings()
         self._token = token
         if not self._token and settings.github_token:
@@ -303,9 +303,7 @@ class GitHubGraphQLClient:
         if not self.has_token:
             return []
 
-        data = await self._execute(
-            CONTRIBUTION_YEARS_QUERY, {"login": username}
-        )
+        data = await self._execute(CONTRIBUTION_YEARS_QUERY, {"login": username})
         user = data.get("user")
         if not user:
             return []
@@ -354,9 +352,7 @@ class GitHubGraphQLClient:
                 GITHUB_API_CALLS.labels(endpoint="graphql", status=str(status)).inc()
 
                 if status == 401:
-                    raise GitHubAPIError(
-                        "GitHub token invalid or expired", status_code=401
-                    )
+                    raise GitHubAPIError("GitHub token invalid or expired", status_code=401)
 
                 # Retryable: rate limit or server errors
                 if status in (403, 429, 502, 503, 504):
@@ -428,7 +424,7 @@ class GitHubGraphQLClient:
     @staticmethod
     def _backoff_delay(attempt: int, base: float = 1.0, max_delay: float = 30.0) -> float:
         """Calculate exponential backoff delay with jitter."""
-        delay = base * (2 ** attempt)
+        delay = base * (2**attempt)
         jitter = random.uniform(0, delay * 0.1)
         return min(delay + jitter, max_delay)
 
@@ -441,10 +437,7 @@ class GitHubGraphQLClient:
         repos_data = user.get("repositories", {})
         repos = []
         for node in repos_data.get("nodes", []):
-            topics = [
-                t["topic"]["name"]
-                for t in node.get("repositoryTopics", {}).get("nodes", [])
-            ]
+            topics = [t["topic"]["name"] for t in node.get("repositoryTopics", {}).get("nodes", [])]
             primary_lang = node.get("primaryLanguage")
             lang_name = primary_lang["name"] if primary_lang else None
 
@@ -455,47 +448,50 @@ class GitHubGraphQLClient:
                 target = branch_ref.get("target", {})
                 total_commits = target.get("history", {}).get("totalCount", 0)
 
-            repos.append({
-                "name": node.get("name", ""),
-                "description": node.get("description"),
-                "language": lang_name,
-                "stars": node.get("stargazerCount", 0),
-                "forks": node.get("forkCount", 0),
-                "is_fork": node.get("isFork", False),
-                "is_archived": node.get("isArchived", False),
-                "updated_at": node.get("updatedAt"),
-                "created_at": node.get("createdAt"),
-                "topics": topics,
-                "total_commits": total_commits,
-            })
+            repos.append(
+                {
+                    "name": node.get("name", ""),
+                    "description": node.get("description"),
+                    "language": lang_name,
+                    "stars": node.get("stargazerCount", 0),
+                    "forks": node.get("forkCount", 0),
+                    "is_fork": node.get("isFork", False),
+                    "is_archived": node.get("isArchived", False),
+                    "updated_at": node.get("updatedAt"),
+                    "created_at": node.get("createdAt"),
+                    "topics": topics,
+                    "total_commits": total_commits,
+                }
+            )
 
         # Transform pinned repos
         pinned = []
         for node in user.get("pinnedItems", {}).get("nodes", []):
             primary_lang = node.get("primaryLanguage")
             lang_name = primary_lang["name"] if primary_lang else None
-            topics = [
-                t["topic"]["name"]
-                for t in node.get("repositoryTopics", {}).get("nodes", [])
-            ]
-            pinned.append({
-                "name": node.get("name", ""),
-                "description": node.get("description"),
-                "language": lang_name,
-                "stars": node.get("stargazerCount", 0),
-                "forks": node.get("forkCount", 0),
-                "topics": topics,
-            })
+            topics = [t["topic"]["name"] for t in node.get("repositoryTopics", {}).get("nodes", [])]
+            pinned.append(
+                {
+                    "name": node.get("name", ""),
+                    "description": node.get("description"),
+                    "language": lang_name,
+                    "stars": node.get("stargazerCount", 0),
+                    "forks": node.get("forkCount", 0),
+                    "topics": topics,
+                }
+            )
 
         # Transform contribution calendar to heatmap
         contribution_days = []
         for week in calendar.get("weeks", []):
             for day in week.get("contributionDays", []):
-                contribution_days.append({
-                    "date": day.get("date"),
-                    "count": day.get("contributionCount", 0),
-                    "weekday": day.get("weekday", 0),
-                })
+                contribution_days.append(
+                    {
+                        "date": day.get("date"),
+                        "count": day.get("contributionCount", 0),
+                        "weekday": day.get("weekday", 0),
+                    }
+                )
 
         # Transform organizations
         orgs = [
@@ -533,9 +529,7 @@ class GitHubGraphQLClient:
                 "repos_contributed_to": contributions.get(
                     "totalRepositoriesWithContributedCommits", 0
                 ),
-                "private_contributions": contributions.get(
-                    "restrictedContributionsCount", 0
-                ),
+                "private_contributions": contributions.get("restrictedContributionsCount", 0),
                 "total_contributions_last_year": calendar.get("totalContributions", 0),
                 "period": "last_year",
             },

@@ -4,9 +4,8 @@ import pytest
 import respx
 from httpx import Response
 
-from services.github_graphql import GitHubGraphQLClient, GITHUB_GRAPHQL_URL
-from app.exceptions import GitHubUserNotFoundError, GitHubRateLimitError, GitHubAPIError
-
+from app.exceptions import GitHubAPIError, GitHubRateLimitError, GitHubUserNotFoundError
+from services.github_graphql import GITHUB_GRAPHQL_URL, GitHubGraphQLClient
 
 MOCK_GRAPHQL_RESPONSE = {
     "data": {
@@ -39,11 +38,7 @@ MOCK_GRAPHQL_RESPONSE = {
                                 {"topic": {"name": "fastapi"}},
                             ]
                         },
-                        "defaultBranchRef": {
-                            "target": {
-                                "history": {"totalCount": 150}
-                            }
-                        },
+                        "defaultBranchRef": {"target": {"history": {"totalCount": 150}}},
                     },
                 ],
             },
@@ -55,9 +50,7 @@ MOCK_GRAPHQL_RESPONSE = {
                         "primaryLanguage": {"name": "TypeScript"},
                         "stargazerCount": 25,
                         "forkCount": 5,
-                        "repositoryTopics": {
-                            "nodes": [{"topic": {"name": "react"}}]
-                        },
+                        "repositoryTopics": {"nodes": [{"topic": {"name": "react"}}]},
                     }
                 ],
             },
@@ -189,9 +182,7 @@ class TestGitHubGraphQLClient:
     @pytest.mark.asyncio
     async def test_fetch_profile_success(self, graphql_client: GitHubGraphQLClient):
         """Successful profile fetch returns transformed data."""
-        respx.post(GITHUB_GRAPHQL_URL).mock(
-            return_value=Response(200, json=MOCK_GRAPHQL_RESPONSE)
-        )
+        respx.post(GITHUB_GRAPHQL_URL).mock(return_value=Response(200, json=MOCK_GRAPHQL_RESPONSE))
         profile = await graphql_client.fetch_profile("testuser")
         assert profile["username"] == "testuser"
         assert profile["name"] == "Test User"
@@ -214,9 +205,15 @@ class TestGitHubGraphQLClient:
     async def test_fetch_profile_not_found(self, graphql_client: GitHubGraphQLClient):
         """Non-existent user raises GitHubUserNotFoundError."""
         respx.post(GITHUB_GRAPHQL_URL).mock(
-            return_value=Response(200, json={
-                "data": {"user": None, "rateLimit": {"cost": 1, "remaining": 4999, "resetAt": ""}},
-            })
+            return_value=Response(
+                200,
+                json={
+                    "data": {
+                        "user": None,
+                        "rateLimit": {"cost": 1, "remaining": 4999, "resetAt": ""},
+                    },
+                },
+            )
         )
         with pytest.raises(GitHubUserNotFoundError):
             await graphql_client.fetch_profile("nonexistent")
@@ -234,9 +231,7 @@ class TestGitHubGraphQLClient:
     @pytest.mark.asyncio
     async def test_fetch_commit_history(self, graphql_client: GitHubGraphQLClient):
         """Commit history fetch returns list of commits."""
-        respx.post(GITHUB_GRAPHQL_URL).mock(
-            return_value=Response(200, json=MOCK_COMMIT_RESPONSE)
-        )
+        respx.post(GITHUB_GRAPHQL_URL).mock(return_value=Response(200, json=MOCK_COMMIT_RESPONSE))
         commits = await graphql_client.fetch_commit_history("testuser", "repo-1", 50)
         assert len(commits) == 2
         assert commits[0]["message"] == "feat: add auth module with Copilot"
@@ -272,9 +267,7 @@ class TestGitHubGraphQLClient:
             "data": MOCK_GRAPHQL_RESPONSE["data"],
             "errors": [{"message": "Some field deprecated", "type": "DEPRECATION"}],
         }
-        respx.post(GITHUB_GRAPHQL_URL).mock(
-            return_value=Response(200, json=response_with_errors)
-        )
+        respx.post(GITHUB_GRAPHQL_URL).mock(return_value=Response(200, json=response_with_errors))
         profile = await graphql_client.fetch_profile("testuser")
         assert profile["username"] == "testuser"
 
@@ -283,9 +276,12 @@ class TestGitHubGraphQLClient:
     async def test_graphql_not_found_error_type(self, graphql_client: GitHubGraphQLClient):
         """GraphQL NOT_FOUND error type raises GitHubUserNotFoundError."""
         respx.post(GITHUB_GRAPHQL_URL).mock(
-            return_value=Response(200, json={
-                "errors": [{"message": "Could not resolve to a User", "type": "NOT_FOUND"}],
-            })
+            return_value=Response(
+                200,
+                json={
+                    "errors": [{"message": "Could not resolve to a User", "type": "NOT_FOUND"}],
+                },
+            )
         )
         with pytest.raises(GitHubUserNotFoundError):
             await graphql_client.fetch_profile("nonexistent")
@@ -304,12 +300,15 @@ class TestGitHubGraphQLClient:
     async def test_repo_without_default_branch(self, graphql_client: GitHubGraphQLClient):
         """Repository without default branch returns empty commits."""
         respx.post(GITHUB_GRAPHQL_URL).mock(
-            return_value=Response(200, json={
-                "data": {
-                    "repository": {"defaultBranchRef": None},
-                    "rateLimit": {"cost": 1, "remaining": 4999, "resetAt": ""},
-                }
-            })
+            return_value=Response(
+                200,
+                json={
+                    "data": {
+                        "repository": {"defaultBranchRef": None},
+                        "rateLimit": {"cost": 1, "remaining": 4999, "resetAt": ""},
+                    }
+                },
+            )
         )
         commits = await graphql_client.fetch_commit_history("testuser", "empty-repo", 50)
         assert commits == []

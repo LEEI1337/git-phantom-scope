@@ -36,9 +36,7 @@ def _filter_sensitive_data(
     return event_dict
 
 
-def _filter_pii(
-    _logger: Any, _method_name: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+def _filter_pii(_logger: Any, _method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
     """Remove PII from log events - privacy first."""
     pii_keys = {"username", "github_username", "user_email", "ip_address"}
     for key in list(event_dict.keys()):

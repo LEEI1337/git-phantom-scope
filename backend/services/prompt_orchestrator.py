@@ -13,7 +13,7 @@ Supports model-specific prompt formatting:
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from app.logging_config import get_logger
 
@@ -155,7 +155,7 @@ class PromptOrchestrator:
         scoring_result: dict[str, Any],
         profile: dict[str, Any],
         style: str = "professional",
-        career_goal: Optional[str] = None,
+        career_goal: str | None = None,
     ) -> dict[str, str]:
         """Build a README generation prompt from scoring and profile data.
 
@@ -168,9 +168,7 @@ class PromptOrchestrator:
         archetype = scoring_result.get("archetype", {})
 
         # Context retrieval: extract most relevant data
-        top_languages = ", ".join(
-            l["name"] for l in tech_profile.get("languages", [])[:5]
-        )
+        top_languages = ", ".join(l["name"] for l in tech_profile.get("languages", [])[:5])
         frameworks = ", ".join(tech_profile.get("frameworks", [])[:8])
         top_repos = "; ".join(
             f"{r['name']} ({r.get('language', 'N/A')}, {r.get('stars', 0)} stars)"
@@ -207,7 +205,7 @@ class PromptOrchestrator:
         template_id: str = "portfolio_banner",
         model_type: str = "gemini",
         style: str = "minimal",
-        colors: Optional[list[str]] = None,
+        colors: list[str] | None = None,
     ) -> str | dict[str, str]:
         """Build an image generation prompt.
 
@@ -227,9 +225,7 @@ class PromptOrchestrator:
         tech_profile = scoring_result.get("tech_profile", {})
         archetype = scoring_result.get("archetype", {})
 
-        top_skills = ", ".join(
-            l["name"] for l in tech_profile.get("languages", [])[:3]
-        )
+        top_skills = ", ".join(l["name"] for l in tech_profile.get("languages", [])[:3])
         color_str = ", ".join(colors) if colors else "#0D1117, #58A6FF, #238636"
 
         if isinstance(template, dict):
@@ -243,10 +239,9 @@ class PromptOrchestrator:
                 ),
                 "negative": template["negative"],
             }
-        else:
-            return template.format(
-                archetype_name=archetype.get("name", "Developer"),
-                top_skills=top_skills,
-                style=style,
-                colors=color_str,
-            )
+        return template.format(
+            archetype_name=archetype.get("name", "Developer"),
+            top_skills=top_skills,
+            style=style,
+            colors=color_str,
+        )

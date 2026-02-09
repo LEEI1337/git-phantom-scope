@@ -8,10 +8,10 @@ from __future__ import annotations
 import json
 import uuid
 
+import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-import redis.asyncio as aioredis
 from api.deps import rate_limit_analyze
 from app.config import get_settings
 from app.dependencies import get_redis

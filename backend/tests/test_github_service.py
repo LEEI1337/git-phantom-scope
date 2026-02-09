@@ -24,37 +24,50 @@ class TestGitHubService:
         """Profile fetch via REST (no GraphQL token) returns data."""
         # Mock REST endpoints
         respx.get("https://api.github.com/users/testuser").mock(
-            return_value=Response(200, json={
-                "login": "testuser",
-                "name": "Test User",
-                "avatar_url": "https://example.com/avatar.png",
-                "public_repos": 42,
-                "followers": 100,
-                "following": 50,
-                "created_at": "2020-01-01T00:00:00Z",
-                "bio": "Developer",
-                "hireable": True,
-            })
+            return_value=Response(
+                200,
+                json={
+                    "login": "testuser",
+                    "name": "Test User",
+                    "avatar_url": "https://example.com/avatar.png",
+                    "public_repos": 42,
+                    "followers": 100,
+                    "following": 50,
+                    "created_at": "2020-01-01T00:00:00Z",
+                    "bio": "Developer",
+                    "hireable": True,
+                },
+            )
         )
         respx.get("https://api.github.com/users/testuser/repos").mock(
-            return_value=Response(200, json=[
-                {
-                    "name": "repo-1",
-                    "description": "A test repo",
-                    "language": "Python",
-                    "stargazers_count": 10,
-                    "forks_count": 3,
-                    "fork": False,
-                    "updated_at": "2026-01-15T12:00:00Z",
-                    "topics": ["python", "fastapi"],
-                },
-            ])
+            return_value=Response(
+                200,
+                json=[
+                    {
+                        "name": "repo-1",
+                        "description": "A test repo",
+                        "language": "Python",
+                        "stargazers_count": 10,
+                        "forks_count": 3,
+                        "fork": False,
+                        "updated_at": "2026-01-15T12:00:00Z",
+                        "topics": ["python", "fastapi"],
+                    },
+                ],
+            )
         )
         respx.get("https://api.github.com/users/testuser/events/public").mock(
-            return_value=Response(200, json=[
-                {"type": "PushEvent", "payload": {"commits": [{}]}, "created_at": "2026-01-15T12:00:00Z"},
-                {"type": "PullRequestEvent", "created_at": "2026-01-14T12:00:00Z"},
-            ])
+            return_value=Response(
+                200,
+                json=[
+                    {
+                        "type": "PushEvent",
+                        "payload": {"commits": [{}]},
+                        "created_at": "2026-01-15T12:00:00Z",
+                    },
+                    {"type": "PullRequestEvent", "created_at": "2026-01-14T12:00:00Z"},
+                ],
+            )
         )
 
         profile = await github_service.get_profile("testuser")
@@ -70,13 +83,16 @@ class TestGitHubService:
     async def test_profile_caching(self, github_service):
         """Second profile fetch should hit cache."""
         respx.get("https://api.github.com/users/cached_user").mock(
-            return_value=Response(200, json={
-                "login": "cached_user",
-                "public_repos": 10,
-                "followers": 5,
-                "following": 3,
-                "created_at": "2023-01-01T00:00:00Z",
-            })
+            return_value=Response(
+                200,
+                json={
+                    "login": "cached_user",
+                    "public_repos": 10,
+                    "followers": 5,
+                    "following": 3,
+                    "created_at": "2023-01-01T00:00:00Z",
+                },
+            )
         )
         respx.get("https://api.github.com/users/cached_user/repos").mock(
             return_value=Response(200, json=[])
@@ -118,17 +134,28 @@ class TestGitHubService:
     async def test_get_commit_history_rest(self, github_service):
         """Commit history fetch via REST returns commits."""
         respx.get("https://api.github.com/repos/testuser/repo-1/commits").mock(
-            return_value=Response(200, json=[
-                {
-                    "commit": {
-                        "message": "feat: add feature with Copilot",
-                        "author": {"name": "Test", "email": "test@example.com", "date": "2026-01-15T10:00:00Z"},
-                        "committer": {"name": "Test", "email": "test@example.com", "date": "2026-01-15T10:00:00Z"},
+            return_value=Response(
+                200,
+                json=[
+                    {
+                        "commit": {
+                            "message": "feat: add feature with Copilot",
+                            "author": {
+                                "name": "Test",
+                                "email": "test@example.com",
+                                "date": "2026-01-15T10:00:00Z",
+                            },
+                            "committer": {
+                                "name": "Test",
+                                "email": "test@example.com",
+                                "date": "2026-01-15T10:00:00Z",
+                            },
+                        },
+                        "author": {"login": "testuser"},
+                        "committer": {"login": "testuser"},
                     },
-                    "author": {"login": "testuser"},
-                    "committer": {"login": "testuser"},
-                },
-            ])
+                ],
+            )
         )
 
         commits = await github_service.get_commit_history("testuser", "repo-1", 50)
@@ -141,13 +168,20 @@ class TestGitHubService:
     async def test_commit_history_caching(self, github_service):
         """Commit history is cached after first fetch."""
         route = respx.get("https://api.github.com/repos/testuser/cached-repo/commits").mock(
-            return_value=Response(200, json=[
-                {
-                    "commit": {"message": "test", "author": {"name": "a", "email": "a@b.c", "date": ""}, "committer": {"name": "a", "email": "a@b.c", "date": ""}},
-                    "author": {"login": "testuser"},
-                    "committer": {"login": "testuser"},
-                },
-            ])
+            return_value=Response(
+                200,
+                json=[
+                    {
+                        "commit": {
+                            "message": "test",
+                            "author": {"name": "a", "email": "a@b.c", "date": ""},
+                            "committer": {"name": "a", "email": "a@b.c", "date": ""},
+                        },
+                        "author": {"login": "testuser"},
+                        "committer": {"login": "testuser"},
+                    },
+                ],
+            )
         )
 
         commits1 = await github_service.get_commit_history("testuser", "cached-repo", 50)
@@ -176,13 +210,16 @@ class TestGitHubService:
             call_count += 1
             if call_count < 3:
                 return Response(503, json={"message": "Service Unavailable"})
-            return Response(200, json={
-                "login": "retryuser",
-                "public_repos": 5,
-                "followers": 10,
-                "following": 5,
-                "created_at": "2023-01-01T00:00:00Z",
-            })
+            return Response(
+                200,
+                json={
+                    "login": "retryuser",
+                    "public_repos": 5,
+                    "followers": 10,
+                    "following": 5,
+                    "created_at": "2023-01-01T00:00:00Z",
+                },
+            )
 
         respx.get("https://api.github.com/users/retryuser").mock(side_effect=side_effect)
         respx.get("https://api.github.com/users/retryuser/repos").mock(

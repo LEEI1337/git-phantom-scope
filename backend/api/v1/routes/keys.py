@@ -20,13 +20,9 @@ class ValidateKeyRequest(BaseModel):
     """BYOK key validation request."""
 
     provider: str = Field(
-        ..., pattern=r"^(gemini|openai|anthropic)$",
-        description="AI provider name"
+        ..., pattern=r"^(gemini|openai|anthropic)$", description="AI provider name"
     )
-    api_key: str = Field(
-        ..., min_length=10, max_length=500,
-        description="Encrypted API key"
-    )
+    api_key: str = Field(..., min_length=10, max_length=500, description="Encrypted API key")
 
 
 class ValidateKeyResponse(BaseModel):

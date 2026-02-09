@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import time
 import uuid
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 import structlog
 from fastapi import FastAPI, Request, Response
@@ -19,8 +19,8 @@ from prometheus_client import make_asgi_app
 
 from app.config import get_settings
 from app.exceptions import GPSBaseError
-from app.logging_config import setup_logging, get_logger
-from app.metrics import APP_INFO, HTTP_REQUESTS_TOTAL, HTTP_REQUEST_DURATION
+from app.logging_config import get_logger, setup_logging
+from app.metrics import APP_INFO, HTTP_REQUEST_DURATION, HTTP_REQUESTS_TOTAL
 
 logger = get_logger(__name__)
 
@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
 
     # Initialize Redis connection pool
-    from app.dependencies import init_redis, close_redis
+    from app.dependencies import close_redis, init_redis
 
     await init_redis()
     logger.info("redis_connected")
@@ -74,7 +74,9 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
-        description="Privacy-First GitHub Profile Intelligence & AI-Powered Visual Identity Platform",
+        description=(
+            "Privacy-First GitHub Profile Intelligence & AI-Powered Visual Identity Platform"
+        ),
         docs_url="/docs" if settings.is_development else None,
         redoc_url="/redoc" if settings.is_development else None,
         lifespan=lifespan,
@@ -142,9 +144,7 @@ def create_app() -> FastAPI:
         )
 
     @app.exception_handler(Exception)
-    async def unhandled_error_handler(
-        _request: Request, exc: Exception
-    ) -> JSONResponse:
+    async def unhandled_error_handler(_request: Request, exc: Exception) -> JSONResponse:
         """Handle unexpected exceptions without leaking internals."""
         logger.exception("unhandled_error", error=str(exc))
         return JSONResponse(

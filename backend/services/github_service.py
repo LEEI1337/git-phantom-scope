@@ -12,10 +12,11 @@ NO GitHub data is persisted to PostgreSQL.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import zlib
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 import redis.asyncio as aioredis
@@ -38,9 +39,9 @@ from services.github_graphql import GitHubGraphQLClient
 logger = get_logger(__name__)
 
 # Cache TTL tiers (seconds)
-CACHE_TTL_PROFILE = 900       # 15 min - full profile
-CACHE_TTL_COMMITS = 600       # 10 min - commit history
-CACHE_TTL_CALENDAR = 1800     # 30 min - contribution calendar (changes slowly)
+CACHE_TTL_PROFILE = 900  # 15 min - full profile
+CACHE_TTL_COMMITS = 600  # 10 min - commit history
+CACHE_TTL_CALENDAR = 1800  # 30 min - contribution calendar (changes slowly)
 CACHE_COMPRESS_THRESHOLD = 4096  # Compress payloads > 4KB
 
 
@@ -82,10 +83,8 @@ class GitHubService:
 
         # Check for compression marker
         if isinstance(raw, bytes) and raw[:2] == b"\x78\x9c":
-            try:
+            with contextlib.suppress(zlib.error):
                 raw = zlib.decompress(raw)
-            except zlib.error:
-                pass
 
         if isinstance(raw, bytes):
             raw = raw.decode("utf-8")
@@ -139,9 +138,7 @@ class GitHubService:
                 profile = await self._graphql.fetch_profile(username)
                 # GraphQL doesn't return aggregated languages, compute from repos
                 if profile and "languages" not in profile:
-                    profile["languages"] = self._aggregate_languages(
-                        profile.get("repos", [])
-                    )
+                    profile["languages"] = self._aggregate_languages(profile.get("repos", []))
                 logger.info("github_graphql_profile_fetched", username_len=len(username))
             except (GitHubAPIError, GitHubRateLimitError) as exc:
                 logger.warning(
@@ -183,9 +180,7 @@ class GitHubService:
 
         if self._graphql.has_token:
             try:
-                commits = await self._graphql.fetch_commit_history(
-                    username, repo_name, count
-                )
+                commits = await self._graphql.fetch_commit_history(username, repo_name, count)
             except (GitHubAPIError, GitHubRateLimitError):
                 logger.warning("commit_history_graphql_failed", repo=repo_name)
 
@@ -205,7 +200,7 @@ class GitHubService:
         languages = self._aggregate_languages(repos_data)
         contribution_stats = await self._fetch_contribution_stats(username)
 
-        profile = {
+        return {
             "username": user_data.get("login", ""),
             "name": user_data.get("name"),
             "avatar_url": user_data.get("avatar_url", ""),
@@ -239,16 +234,12 @@ class GitHubService:
             "contribution_calendar": [],
         }
 
-        return profile
-
     async def _fetch_user(self, username: str) -> dict[str, Any]:
         """Fetch user profile from GitHub REST API."""
         url = f"{self.settings.github_api_base}/users/{username}"
         return await self._api_request(url)
 
-    async def _fetch_repos(
-        self, username: str, per_page: int = 100
-    ) -> list[dict[str, Any]]:
+    async def _fetch_repos(self, username: str, per_page: int = 100) -> list[dict[str, Any]]:
         """Fetch public repositories, sorted by most recently updated."""
         url = f"{self.settings.github_api_base}/users/{username}/repos"
         params = {
@@ -274,14 +265,9 @@ class GitHubService:
             push_events = [e for e in events if e.get("type") == "PushEvent"]
             pr_events = [e for e in events if e.get("type") == "PullRequestEvent"]
             issue_events = [e for e in events if e.get("type") == "IssuesEvent"]
-            review_events = [
-                e for e in events if e.get("type") == "PullRequestReviewEvent"
-            ]
+            review_events = [e for e in events if e.get("type") == "PullRequestReviewEvent"]
 
-            total_commits = sum(
-                len(e.get("payload", {}).get("commits", []))
-                for e in push_events
-            )
+            total_commits = sum(len(e.get("payload", {}).get("commits", [])) for e in push_events)
 
             return {
                 "recent_commits": total_commits,
@@ -315,9 +301,7 @@ class GitHubService:
         """
         url = f"{self.settings.github_api_base}/repos/{owner}/{repo_name}/commits"
         try:
-            commits_raw = await self._api_request(
-                url, params={"per_page": min(count, 100)}
-            )
+            commits_raw = await self._api_request(url, params={"per_page": min(count, 100)})
             if not isinstance(commits_raw, list):
                 return []
 
@@ -353,22 +337,19 @@ class GitHubService:
                 lang_counts[lang] = lang_counts.get(lang, 0) + 1
 
         total = sum(lang_counts.values()) or 1
-        languages = [
+        return [
             {
                 "name": lang,
                 "count": count,
                 "percentage": round(count / total * 100, 1),
             }
-            for lang, count in sorted(
-                lang_counts.items(), key=lambda x: x[1], reverse=True
-            )
+            for lang, count in sorted(lang_counts.items(), key=lambda x: x[1], reverse=True)
         ]
-        return languages
 
     async def _api_request(
         self,
         url: str,
-        params: Optional[dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
         max_retries: int = 3,
     ) -> Any:
         """Make an authenticated request to GitHub API with retry logic.
@@ -387,9 +368,7 @@ class GitHubService:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 with GITHUB_API_DURATION.labels(endpoint=endpoint).time():
                     try:
-                        response = await client.get(
-                            url, headers=self._headers, params=params
-                        )
+                        response = await client.get(url, headers=self._headers, params=params)
                     except httpx.RequestError as exc:
                         GITHUB_API_CALLS.labels(endpoint=endpoint, status="error").inc()
                         last_exception = exc
@@ -403,9 +382,7 @@ class GitHubService:
                             )
                             await asyncio.sleep(wait)
                             continue
-                        raise GitHubAPIError(
-                            "GitHub API connection failed after retries"
-                        ) from exc
+                        raise GitHubAPIError("GitHub API connection failed after retries") from exc
 
                 status = response.status_code
                 GITHUB_API_CALLS.labels(endpoint=endpoint, status=str(status)).inc()
@@ -414,9 +391,7 @@ class GitHubService:
                 if status == 404:
                     raise GitHubUserNotFoundError()
                 if status == 401:
-                    raise GitHubAPIError(
-                        "GitHub token invalid or expired", status_code=401
-                    )
+                    raise GitHubAPIError("GitHub token invalid or expired", status_code=401)
 
                 # Retryable: rate limit
                 if status in (403, 429):
@@ -484,6 +459,6 @@ class GitHubService:
         """
         import random
 
-        delay = base * (2 ** attempt)
+        delay = base * (2**attempt)
         jitter = random.uniform(0, delay * 0.1)
         return min(delay + jitter, max_delay)

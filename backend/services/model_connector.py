@@ -14,14 +14,13 @@ from __future__ import annotations
 
 import base64
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
-from app.config import get_settings
 from app.exceptions import InvalidBYOKKeyError, ModelProviderError
 from app.logging_config import get_logger
-from app.metrics import MODEL_CALLS, MODEL_CALL_DURATION
+from app.metrics import MODEL_CALL_DURATION, MODEL_CALLS
 
 logger = get_logger(__name__)
 
@@ -74,8 +73,7 @@ class GeminiConnector(BaseModelConnector):
                         "image_generation": True,
                     },
                 }
-            else:
-                raise InvalidBYOKKeyError("gemini")
+            raise InvalidBYOKKeyError("gemini")
         except httpx.RequestError:
             raise ModelProviderError("gemini", "Gemini API unreachable")
 
@@ -90,9 +88,7 @@ class GeminiConnector(BaseModelConnector):
                     "role": "user",
                 }
             ],
-            "systemInstruction": {
-                "parts": [{"text": prompt.get("system", "")}]
-            },
+            "systemInstruction": {"parts": [{"text": prompt.get("system", "")}]},
             "generationConfig": {
                 "temperature": 0.7,
                 "maxOutputTokens": 2048,
@@ -102,9 +98,7 @@ class GeminiConnector(BaseModelConnector):
         try:
             with MODEL_CALL_DURATION.labels(provider="gemini", model="gemini-2.0-flash").time():
                 async with httpx.AsyncClient(timeout=60.0) as client:
-                    response = await client.post(
-                        url, json=payload, params={"key": api_key}
-                    )
+                    response = await client.post(url, json=payload, params={"key": api_key})
 
             MODEL_CALLS.labels(
                 provider="gemini",
@@ -150,9 +144,7 @@ class GeminiConnector(BaseModelConnector):
         try:
             with MODEL_CALL_DURATION.labels(provider="gemini", model="imagen-3").time():
                 async with httpx.AsyncClient(timeout=120.0) as client:
-                    response = await client.post(
-                        url, json=payload, params={"key": api_key}
-                    )
+                    response = await client.post(url, json=payload, params={"key": api_key})
 
             MODEL_CALLS.labels(
                 provider="gemini", model="imagen-3", type="image", status=str(response.status_code)
@@ -186,9 +178,7 @@ class OpenAIConnector(BaseModelConnector):
         url = "https://api.openai.com/v1/models"
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(
-                    url, headers={"Authorization": f"Bearer {api_key}"}
-                )
+                response = await client.get(url, headers={"Authorization": f"Bearer {api_key}"})
             if response.status_code == 200:
                 return {
                     "valid": True,
@@ -239,9 +229,7 @@ class OpenAIConnector(BaseModelConnector):
             return data["choices"][0]["message"]["content"]
 
         except httpx.RequestError:
-            MODEL_CALLS.labels(
-                provider="openai", model="gpt-4o", type="text", status="error"
-            ).inc()
+            MODEL_CALLS.labels(provider="openai", model="gpt-4o", type="text", status="error").inc()
             raise ModelProviderError("openai", "OpenAI API connection failed")
 
     async def generate_image(

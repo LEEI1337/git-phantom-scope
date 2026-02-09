@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import io
 import zipfile
-from pathlib import Path
-from typing import Any, Optional
 
 from app.logging_config import get_logger
 
@@ -56,10 +54,10 @@ class Packager:
     def create_bundle(
         self,
         readme_content: str,
-        banner_image: Optional[bytes] = None,
-        cover_images: Optional[list[bytes]] = None,
-        social_cards: Optional[dict[str, bytes]] = None,
-        instructions: Optional[str] = None,
+        banner_image: bytes | None = None,
+        cover_images: list[bytes] | None = None,
+        social_cards: dict[str, bytes] | None = None,
+        instructions: str | None = None,
     ) -> bytes:
         """Create a ZIP bundle with all profile assets.
 

@@ -17,7 +17,6 @@ from sqlalchemy import (
     DateTime,
     Integer,
     String,
-    Text,
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -40,9 +39,7 @@ class GenerationStat(Base):
 
     __tablename__ = "generation_stats"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -55,7 +52,9 @@ class GenerationStat(Base):
     error_code: Mapped[str | None] = mapped_column(String(50))
 
     def __repr__(self) -> str:
-        return f"<GenerationStat(id={self.id}, template={self.template_id}, success={self.success})>"
+        return (
+            f"<GenerationStat(id={self.id}, template={self.template_id}, success={self.success})>"
+        )
 
 
 class AIUsageBucket(Base):
@@ -67,14 +66,10 @@ class AIUsageBucket(Base):
 
     __tablename__ = "ai_usage_buckets"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     language: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    ai_bucket: Mapped[str] = mapped_column(
-        String(20), nullable=False
-    )  # 0_10, 10_30, 30_60, 60_100
+    ai_bucket: Mapped[str] = mapped_column(String(20), nullable=False)  # 0_10, 10_30, 30_60, 60_100
     sample_size: Mapped[int] = mapped_column(Integer, default=1)
     archetype: Mapped[str | None] = mapped_column(String(50))
 
@@ -91,15 +86,11 @@ class TrendSnapshot(Base):
 
     __tablename__ = "trend_snapshots"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     metric_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     metric_value: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    granularity: Mapped[str] = mapped_column(
-        String(20), default="daily"
-    )  # daily, weekly, monthly
+    granularity: Mapped[str] = mapped_column(String(20), default="daily")  # daily, weekly, monthly
 
     def __repr__(self) -> str:
         return f"<TrendSnapshot(date={self.date}, metric={self.metric_name})>"
@@ -114,9 +105,7 @@ class TemplateUsage(Base):
 
     __tablename__ = "template_usage"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     template_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     tier: Mapped[str] = mapped_column(String(20), default="free")

@@ -54,6 +54,7 @@ class HealthMonitor:
                 return False
             async with _engine.connect() as conn:
                 from sqlalchemy import text
+
                 await conn.execute(text("SELECT 1"))
             return True
         except Exception:

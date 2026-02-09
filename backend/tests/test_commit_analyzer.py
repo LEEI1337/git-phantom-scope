@@ -2,7 +2,7 @@
 
 import pytest
 
-from services.commit_analyzer import CommitAnalyzer, CommitAnalysisResult
+from services.commit_analyzer import CommitAnalyzer
 
 
 @pytest.fixture
@@ -76,8 +76,7 @@ class TestCommitAnalyzer:
             },
             {
                 "message": (
-                    "fix: resolve type error\n\n"
-                    "Co-authored-by: copilot-chat <copilot@github.com>"
+                    "fix: resolve type error\n\nCo-authored-by: copilot-chat <copilot@github.com>"
                 )
             },
         ]

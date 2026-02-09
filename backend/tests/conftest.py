@@ -1,11 +1,11 @@
 """Shared test fixtures for Git Phantom Scope backend."""
 
 import asyncio
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock
 
-import pytest
 import fakeredis.aioredis
+import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.config import Settings

@@ -9,7 +9,7 @@ from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.logging_config import get_logger
@@ -81,9 +81,7 @@ async def get_public_insights(
     )
 
 
-async def _get_ai_usage_by_language(
-    db: AsyncSession, start_date: date
-) -> list[dict]:
+async def _get_ai_usage_by_language(db: AsyncSession, start_date: date) -> list[dict]:
     """Get AI usage distribution by programming language."""
     stmt = (
         select(
@@ -111,9 +109,7 @@ async def _get_ai_usage_by_language(
     return list(by_language.values())
 
 
-async def _get_archetype_distribution(
-    db: AsyncSession, start_date: date
-) -> list[dict]:
+async def _get_archetype_distribution(db: AsyncSession, start_date: date) -> list[dict]:
     """Get developer archetype distribution."""
     stmt = (
         select(
@@ -163,7 +159,4 @@ async def _get_generation_trends(db: AsyncSession, start_date: date) -> list[dic
     )
 
     result = await db.execute(stmt)
-    return [
-        {"date": str(row.date), "data": row.metric_value}
-        for row in result.all()
-    ]
+    return [{"date": str(row.date), "data": row.metric_value} for row in result.all()]

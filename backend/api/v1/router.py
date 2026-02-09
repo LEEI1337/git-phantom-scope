@@ -9,8 +9,8 @@ from fastapi import APIRouter
 
 from api.v1.routes.analyze import router as analyze_router
 from api.v1.routes.generate import router as generate_router
-from api.v1.routes.keys import router as keys_router
 from api.v1.routes.insights import router as insights_router
+from api.v1.routes.keys import router as keys_router
 
 api_v1_router = APIRouter()
 

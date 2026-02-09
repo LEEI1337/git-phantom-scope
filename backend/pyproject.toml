@@ -34,10 +34,10 @@ select = [
     "RET",  # flake8-return
     "SIM",  # flake8-simplify
 ]
-ignore = ["S101", "S104", "B008"]
+ignore = ["S101", "S104", "S311", "B008", "B904", "E741", "RET504"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "S106"]
+"tests/**/*.py" = ["S101", "S106", "B017", "E501"]
 
 [tool.mypy]
 python_version = "3.12"

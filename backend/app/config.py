@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from enum import Enum
 from functools import lru_cache
-from typing import Optional
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -44,9 +43,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # CORS
-    cors_origins: list[str] = Field(
-        default=["http://localhost:3000", "http://127.0.0.1:3000"]
-    )
+    cors_origins: list[str] = Field(default=["http://localhost:3000", "http://127.0.0.1:3000"])
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"
@@ -61,7 +58,7 @@ class Settings(BaseSettings):
     # GitHub API
     github_api_base: str = "https://api.github.com"
     github_cache_ttl: int = 900  # 15 minutes
-    github_token: Optional[SecretStr] = None
+    github_token: SecretStr | None = None
 
     # Rate Limiting
     rate_limit_analyze_per_day: int = 3
@@ -69,7 +66,7 @@ class Settings(BaseSettings):
     rate_limit_requests_per_minute: int = 30
 
     # Gemini (shared free key for free tier)
-    gemini_shared_key: Optional[SecretStr] = None
+    gemini_shared_key: SecretStr | None = None
     gemini_rate_limit_per_minute: int = 15
     gemini_rate_limit_per_day: int = 1500
 
@@ -88,7 +85,7 @@ class Settings(BaseSettings):
 
     # Security
     session_secret_key: SecretStr = SecretStr("change-me-in-production")
-    byok_encryption_key: Optional[SecretStr] = None
+    byok_encryption_key: SecretStr | None = None
 
     # Prometheus
     metrics_enabled: bool = True

@@ -1,9 +1,9 @@
 """Tests for the analysis API endpoint."""
 
-import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import fakeredis.aioredis
+import pytest
 
 from app.dependencies import get_redis
 from app.exceptions import GitHubUserNotFoundError
@@ -155,8 +155,15 @@ class TestAnalyzeEndpoint:
         assert response.status_code == 200
         data = response.json()
         for field in [
-            "session_id", "profile", "scores", "archetype",
-            "ai_analysis", "tech_profile", "contribution_calendar",
-            "pinned_repos", "organizations", "meta",
+            "session_id",
+            "profile",
+            "scores",
+            "archetype",
+            "ai_analysis",
+            "tech_profile",
+            "contribution_calendar",
+            "pinned_repos",
+            "organizations",
+            "meta",
         ]:
             assert field in data, f"Missing field: {field}"

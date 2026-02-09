@@ -14,7 +14,7 @@ CRITICAL: Error messages must NEVER contain PII (usernames, emails, keys).
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 
 class GPSBaseError(Exception):
@@ -25,7 +25,7 @@ class GPSBaseError(Exception):
         code: str,
         message: str,
         status_code: int = 500,
-        details: Optional[dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         self.code = code
         self.message = message
@@ -81,7 +81,7 @@ class GitHubUserNotFoundError(GPSBaseError):
 class GitHubRateLimitError(GPSBaseError):
     """GitHub API rate limit exceeded."""
 
-    def __init__(self, retry_after: Optional[int] = None) -> None:
+    def __init__(self, retry_after: int | None = None) -> None:
         details = {}
         if retry_after:
             details["retry_after_seconds"] = retry_after
@@ -153,7 +153,7 @@ class ModelProviderError(GPSBaseError):
 class ValidationError(GPSBaseError):
     """Input validation error."""
 
-    def __init__(self, message: str, details: Optional[dict[str, Any]] = None) -> None:
+    def __init__(self, message: str, details: dict[str, Any] | None = None) -> None:
         super().__init__(
             code="VALIDATION_ERROR",
             message=message,

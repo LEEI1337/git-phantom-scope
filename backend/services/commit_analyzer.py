@@ -28,7 +28,10 @@ logger = get_logger(__name__)
 # Direct mentions of AI tools in commit messages
 AI_TOOL_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bcopilot\b", re.IGNORECASE), "GitHub Copilot"),
-    (re.compile(r"\bchatgpt\b|\bchat-gpt\b|\bgpt-4o?\b|\bgpt-3\.?5\b", re.IGNORECASE), "ChatGPT/OpenAI"),
+    (
+        re.compile(r"\bchatgpt\b|\bchat-gpt\b|\bgpt-4o?\b|\bgpt-3\.?5\b", re.IGNORECASE),
+        "ChatGPT/OpenAI",
+    ),
     (re.compile(r"\bgemini\b", re.IGNORECASE), "Google Gemini"),
     (re.compile(r"\bclaude\b|\banthrop", re.IGNORECASE), "Claude/Anthropic"),
     (re.compile(r"\bcursor\b", re.IGNORECASE), "Cursor"),
@@ -36,8 +39,14 @@ AI_TOOL_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\btabnine\b", re.IGNORECASE), "Tabnine"),
     (re.compile(r"\bcody\b", re.IGNORECASE), "Sourcegraph Cody"),
     (re.compile(r"\bsupermaven\b", re.IGNORECASE), "Supermaven"),
-    (re.compile(r"\bai[- ]generated\b|\bai[- ]assisted\b|\bai[- ]powered\b", re.IGNORECASE), "AI-Assisted (generic)"),
-    (re.compile(r"\bgenerated\s+(?:by|with|using)\s+ai\b", re.IGNORECASE), "AI-Generated (generic)"),
+    (
+        re.compile(r"\bai[- ]generated\b|\bai[- ]assisted\b|\bai[- ]powered\b", re.IGNORECASE),
+        "AI-Assisted (generic)",
+    ),
+    (
+        re.compile(r"\bgenerated\s+(?:by|with|using)\s+ai\b", re.IGNORECASE),
+        "AI-Generated (generic)",
+    ),
     (re.compile(r"\bllm\b|\blarge\s+language\s+model\b", re.IGNORECASE), "LLM (generic)"),
 ]
 
@@ -55,19 +64,29 @@ CO_AUTHOR_BOT_PATTERNS: list[tuple[re.Pattern[str], str]] = [
 # Patterns suggesting AI-generated commit messages (heuristic)
 AI_MESSAGE_HEURISTICS: list[tuple[re.Pattern[str], str, float]] = [
     # Very generic, potentially auto-generated messages
-    (re.compile(r"^(update|fix|refactor|improve|add|remove|clean)\s+\w+$", re.IGNORECASE),
-     "generic_single_word_action", 0.1),
+    (
+        re.compile(r"^(update|fix|refactor|improve|add|remove|clean)\s+\w+$", re.IGNORECASE),
+        "generic_single_word_action",
+        0.1,
+    ),
     # Overly detailed single-line commits (AI tends to be verbose)
     (re.compile(r"^.{150,}$"), "overly_verbose_single_line", 0.15),
     # Conventional commit with very detailed scope
-    (re.compile(r"^(feat|fix|docs|style|refactor|test|chore)\(.{30,}\):", re.IGNORECASE),
-     "detailed_conventional_commit", 0.05),
+    (
+        re.compile(r"^(feat|fix|docs|style|refactor|test|chore)\(.{30,}\):", re.IGNORECASE),
+        "detailed_conventional_commit",
+        0.05,
+    ),
     # "Implement" or "Implemented" as first word (common AI pattern)
-    (re.compile(r"^implement(ed|s|ing)?\s", re.IGNORECASE),
-     "implement_prefix", 0.1),
+    (re.compile(r"^implement(ed|s|ing)?\s", re.IGNORECASE), "implement_prefix", 0.1),
     # Long descriptive messages starting with articles
-    (re.compile(r"^(This|The|A|An)\s+(commit|change|update|patch|PR|pull request)\s",
-                re.IGNORECASE), "article_prefix_commit", 0.2),
+    (
+        re.compile(
+            r"^(This|The|A|An)\s+(commit|change|update|patch|PR|pull request)\s", re.IGNORECASE
+        ),
+        "article_prefix_commit",
+        0.2,
+    ),
 ]
 
 # Co-author extraction regex
@@ -142,9 +161,7 @@ class CommitAnalyzer:
             # Check for co-author bots
             for pattern, bot_name in CO_AUTHOR_BOT_PATTERNS:
                 if pattern.search(message):
-                    result.co_author_bots[bot_name] = (
-                        result.co_author_bots.get(bot_name, 0) + 1
-                    )
+                    result.co_author_bots[bot_name] = result.co_author_bots.get(bot_name, 0) + 1
                     has_ai_signal = True
 
             # Extract all co-authors
@@ -175,10 +192,7 @@ class CommitAnalyzer:
     def _extract_co_authors(self, message: str) -> list[dict[str, str]]:
         """Extract co-author tags from commit message."""
         matches = CO_AUTHOR_REGEX.findall(message)
-        return [
-            {"name": name.strip(), "email": email.strip()}
-            for name, email in matches
-        ]
+        return [{"name": name.strip(), "email": email.strip()} for name, email in matches]
 
     def _apply_heuristics(self, message: str) -> float:
         """Apply heuristic patterns to estimate AI-generation likelihood."""

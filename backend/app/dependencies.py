@@ -6,20 +6,20 @@ as FastAPI dependencies for injection into route handlers.
 
 from __future__ import annotations
 
-from typing import AsyncGenerator, Optional
+from collections.abc import AsyncGenerator
 
 import redis.asyncio as aioredis
 from fastapi import Depends, Request
 
-from app.config import Settings, get_settings
+from app.config import get_settings
 from app.exceptions import RateLimitError, SessionNotFoundError
 from app.logging_config import get_logger
-from app.metrics import ACTIVE_SESSIONS, RATE_LIMIT_HITS
+from app.metrics import RATE_LIMIT_HITS
 
 logger = get_logger(__name__)
 
 # Global Redis connection pool
-_redis_pool: Optional[aioredis.Redis] = None
+_redis_pool: aioredis.Redis | None = None
 
 
 async def init_redis() -> None:
@@ -60,9 +60,7 @@ async def get_session_data(
     Sessions store temporary analysis results and are keyed by session_id.
     TTL is enforced to ensure PII is auto-deleted.
     """
-    session_id = request.headers.get("X-Session-ID") or request.query_params.get(
-        "session_id"
-    )
+    session_id = request.headers.get("X-Session-ID") or request.query_params.get("session_id")
     if not session_id:
         raise SessionNotFoundError()
 
@@ -105,9 +103,7 @@ class RateLimiter:
 
         request_count = results[2]
         if request_count > self.max_requests:
-            RATE_LIMIT_HITS.labels(
-                endpoint=self.key_prefix, limit_type="sliding_window"
-            ).inc()
+            RATE_LIMIT_HITS.labels(endpoint=self.key_prefix, limit_type="sliding_window").inc()
             raise RateLimitError(
                 limit_type=self.key_prefix,
                 retry_after=self.window_seconds,

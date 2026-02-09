@@ -36,7 +36,9 @@ ARCHETYPES = {
     "ai_indie_hacker": {
         "name": "AI-Driven Indie Hacker",
         "description": "High AI usage, high activity, low collaboration",
-        "conditions": lambda s: s["ai_savviness"] >= 70 and s["activity"] >= 60 and s["collaboration"] < 40,
+        "conditions": lambda s: s["ai_savviness"] >= 70
+        and s["activity"] >= 60
+        and s["collaboration"] < 40,
     },
     "open_source_maintainer": {
         "name": "Open Source Maintainer",
@@ -224,10 +226,21 @@ class ScoringEngine:
 
         # AI-related topics (max 20 points)
         ai_topics = {
-            "machine-learning", "deep-learning", "artificial-intelligence",
-            "ai", "ml", "nlp", "llm", "gpt", "transformers",
-            "neural-network", "computer-vision", "data-science",
-            "chatgpt", "copilot", "generative-ai",
+            "machine-learning",
+            "deep-learning",
+            "artificial-intelligence",
+            "ai",
+            "ml",
+            "nlp",
+            "llm",
+            "gpt",
+            "transformers",
+            "neural-network",
+            "computer-vision",
+            "data-science",
+            "chatgpt",
+            "copilot",
+            "generative-ai",
         }
         all_topics: set[str] = set()
         for repo in repos:
@@ -373,8 +386,7 @@ class ScoringEngine:
             result["commit_analysis"] = commit_details
         else:
             result["note"] = (
-                "Based on public repository metadata. "
-                "Commit analysis available with GitHub token."
+                "Based on public repository metadata. Commit analysis available with GitHub token."
             )
 
         return result
@@ -390,10 +402,25 @@ class ScoringEngine:
             framework_topics.update(repo.get("topics", []))
 
         known_frameworks = {
-            "react", "nextjs", "vue", "angular", "svelte",
-            "fastapi", "django", "flask", "express", "nestjs",
-            "pytorch", "tensorflow", "langchain", "docker", "kubernetes",
-            "tailwindcss", "graphql", "postgres", "mongodb",
+            "react",
+            "nextjs",
+            "vue",
+            "angular",
+            "svelte",
+            "fastapi",
+            "django",
+            "flask",
+            "express",
+            "nestjs",
+            "pytorch",
+            "tensorflow",
+            "langchain",
+            "docker",
+            "kubernetes",
+            "tailwindcss",
+            "graphql",
+            "postgres",
+            "mongodb",
         }
         detected_frameworks = sorted(framework_topics & known_frameworks)
 
@@ -401,7 +428,9 @@ class ScoringEngine:
         top_repos = sorted(repos, key=lambda r: r.get("stars", 0), reverse=True)[:5]
 
         return {
-            "languages": list(languages.keys())[:10] if isinstance(languages, dict) else languages[:10],
+            "languages": list(languages.keys())[:10]
+            if isinstance(languages, dict)
+            else languages[:10],
             "frameworks": detected_frameworks[:15],
             "top_repos": [
                 {

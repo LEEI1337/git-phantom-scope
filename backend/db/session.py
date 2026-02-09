@@ -6,7 +6,7 @@ NO PII (usernames, emails, profile data) is ever stored here.
 
 from __future__ import annotations
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
