@@ -87,6 +87,11 @@ class Settings(BaseSettings):
     session_secret_key: SecretStr = SecretStr("change-me-in-production")
     byok_encryption_key: SecretStr | None = None
 
+    # Stripe (payment processing)
+    stripe_secret_key: SecretStr | None = None
+    stripe_webhook_secret: SecretStr | None = None
+    stripe_publishable_key: str | None = None
+
     # Prometheus
     metrics_enabled: bool = True
 

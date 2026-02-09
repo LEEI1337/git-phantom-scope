@@ -9,6 +9,10 @@ Supports model-specific prompt formatting:
 - Stable Diffusion: Keywords, negative prompts
 - FLUX.1: Concise descriptions
 - OpenAI: Structured, role-based prompts
+
+Template tiers:
+- Free: portfolio_banner, skill_wheel, social_card (3 templates)
+- Pro: All free + 10 premium templates (13 total)
 """
 
 from __future__ import annotations
@@ -20,7 +24,8 @@ from app.logging_config import get_logger
 logger = get_logger(__name__)
 
 
-# Prompt templates for text generation (README)
+# --- README TEMPLATES ---
+
 README_TEMPLATES = {
     "professional": {
         "system": (
@@ -44,6 +49,7 @@ README_TEMPLATES = {
             "Include: A brief intro, skills section, stats visualization placeholders, "
             "and a contact section. Keep it under 80 lines."
         ),
+        "tier": "free",
     },
     "creative": {
         "system": (
@@ -64,11 +70,78 @@ README_TEMPLATES = {
             "{career_goal_section}"
             "\nMake it memorable and authentic."
         ),
+        "tier": "free",
+    },
+    "storyteller": {
+        "system": (
+            "You are a narrative designer who creates developer stories. "
+            "Write a GitHub README that tells the developer's coding journey "
+            "as a compelling narrative. Use metaphors from their archetype. "
+            "Balance storytelling with useful technical information."
+        ),
+        "user": (
+            "Write a story-driven GitHub README for a {archetype_name}.\n\n"
+            "The Developer's Journey:\n"
+            "- Languages mastered: {top_languages}\n"
+            "- Arsenal: {frameworks}\n"
+            "- Activity: {activity_score}/100, Collaboration: {collab_score}/100\n"
+            "- Diversity: {diversity_score}/100, AI Savviness: {ai_score}/100\n"
+            "- Flagship projects: {top_repos}\n"
+            "{career_goal_section}"
+            "\nStyle: narrative, engaging, use archetype-themed metaphors.\n"
+            "Include markdown badges and a stats section. Under 100 lines."
+        ),
+        "tier": "pro",
+    },
+    "minimalist": {
+        "system": (
+            "You are a minimalist design expert. Create an ultra-clean GitHub "
+            "README with maximum information density in minimum space. "
+            "Use monospace elements, ASCII art dividers, and sparse formatting. "
+            "Every word must earn its place."
+        ),
+        "user": (
+            "Create a minimalist GitHub README for a {archetype_name}.\n\n"
+            "Core data:\n"
+            "- Stack: {top_languages} | {frameworks}\n"
+            "- Metrics: A:{activity_score} C:{collab_score} "
+            "D:{diversity_score} AI:{ai_score}\n"
+            "- Work: {top_repos}\n"
+            "{career_goal_section}"
+            "\nRules: No emojis, minimal markdown, elegant simplicity. "
+            "Under 40 lines."
+        ),
+        "tier": "pro",
+    },
+    "recruiter_ready": {
+        "system": (
+            "You are a tech recruiter advisor. Create a GitHub README optimized "
+            "for hiring managers and technical recruiters. Emphasize measurable "
+            "achievements, tech stack clarity, and professional presentation. "
+            "Include sections recruiters look for."
+        ),
+        "user": (
+            "Create a recruiter-optimized GitHub README for a {archetype_name}.\n\n"
+            "Professional Profile:\n"
+            "- Technical Stack: {top_languages}\n"
+            "- Frameworks & Tools: {frameworks}\n"
+            "- Activity Score: {activity_score}/100 (consistency indicator)\n"
+            "- Collaboration Score: {collab_score}/100 (team player indicator)\n"
+            "- Stack Diversity: {diversity_score}/100\n"
+            "- AI Proficiency: {ai_score}/100\n"
+            "- Key Projects: {top_repos}\n"
+            "{career_goal_section}"
+            "\nInclude: Summary, Skills Matrix, Featured Projects with impact "
+            "metrics, Open Source Contributions, Contact/Availability section."
+        ),
+        "tier": "pro",
     },
 }
 
-# Prompt templates for image generation
+# --- IMAGE TEMPLATES ---
+
 IMAGE_TEMPLATES = {
+    # === FREE TIER (3 templates) ===
     "portfolio_banner": {
         "gemini": (
             "Create a minimalistic, dark-themed professional banner for a "
@@ -94,6 +167,7 @@ IMAGE_TEMPLATES = {
             "{colors} palette. Abstract symbols: {top_skills}. "
             "Clean, geometric, professional. No text. No faces."
         ),
+        "tier": "free",
     },
     "skill_wheel": {
         "gemini": (
@@ -119,6 +193,7 @@ IMAGE_TEMPLATES = {
             "Circular data visualization. Dark background. "
             "Professional, clean, modern."
         ),
+        "tier": "free",
     },
     "social_card": {
         "gemini": (
@@ -143,8 +218,276 @@ IMAGE_TEMPLATES = {
             "Abstract tech symbols: {top_skills}. Dark. Professional. "
             "Space for text overlay. No text."
         ),
+        "tier": "free",
+    },
+    # === PRO TIER (10 premium templates) ===
+    "neon_circuit": {
+        "gemini": (
+            "Create a neon-lit circuit board inspired banner for a "
+            "{archetype_name}. Glowing traces in {colors} on dark PCB. "
+            "Components represent: {top_skills}. Style: {style}. "
+            "Cyberpunk tech aesthetic. 1584x396. No text, no faces."
+        ),
+        "stable_diffusion": {
+            "positive": (
+                "neon circuit board art, glowing traces, cyberpunk tech, "
+                "PCB design, {style} style, {colors} neon glow, "
+                "dark background, components for {top_skills}, "
+                "high quality, 4k, ultradetailed, dramatic lighting"
+            ),
+            "negative": (
+                "text, words, face, person, photo, realistic human, "
+                "low quality, blurry, watermark, simple, flat"
+            ),
+        },
+        "flux": (
+            "Neon circuit board banner for {archetype_name}. "
+            "Glowing {colors} traces on dark PCB. {top_skills} as components. "
+            "{style}. Cyberpunk. No text. No faces."
+        ),
+        "tier": "pro",
+    },
+    "code_galaxy": {
+        "gemini": (
+            "Create a cosmic galaxy visualization where stars and nebulae "
+            "represent programming skills for a {archetype_name}. "
+            "Colors: {colors}. Each constellation maps to: {top_skills}. "
+            "Style: {style}. 1584x396. No text, no faces."
+        ),
+        "stable_diffusion": {
+            "positive": (
+                "cosmic galaxy nebula, constellation art, programming universe, "
+                "{style} style, {colors} nebula colors, space background, "
+                "stars as code, {top_skills} constellations, "
+                "high quality, 4k, beautiful, ethereal"
+            ),
+            "negative": (
+                "text, words, face, person, planet earth, spaceship, "
+                "low quality, blurry, watermark, cartoon"
+            ),
+        },
+        "flux": (
+            "Code galaxy banner. Cosmic nebulae as {top_skills}. "
+            "{colors} palette. {style}. Constellations. Dark space. "
+            "No text. No faces."
+        ),
+        "tier": "pro",
+    },
+    "isometric_workspace": {
+        "gemini": (
+            "Create an isometric 3D illustration of a developer workspace "
+            "for a {archetype_name}. Include stylized monitors showing "
+            "code in {top_skills}. Color palette: {colors}. "
+            "Style: {style}. Low-poly aesthetic. 1584x396. No faces."
+        ),
+        "stable_diffusion": {
+            "positive": (
+                "isometric 3D workspace, developer desk, low poly art, "
+                "monitors with code, {style} style, {colors} palette, "
+                "{top_skills} themed objects, clean design, "
+                "high quality, 4k, detailed miniature"
+            ),
+            "negative": (
+                "text, words, face, person photo, realistic, messy, "
+                "low quality, blurry, watermark, cluttered"
+            ),
+        },
+        "flux": (
+            "Isometric developer workspace. Low-poly 3D. {top_skills} themed. "
+            "{colors}. {style}. Monitors and code. No faces. Clean."
+        ),
+        "tier": "pro",
+    },
+    "gradient_mesh": {
+        "gemini": (
+            "Create an abstract gradient mesh banner with flowing curves "
+            "and layered depth for a {archetype_name}. "
+            "Colors: {colors}. Inspired by: {top_skills}. "
+            "Style: {style}. Smooth, modern, Apple-tier design. "
+            "1584x396. No text, no faces."
+        ),
+        "stable_diffusion": {
+            "positive": (
+                "abstract gradient mesh, flowing curves, layered depth, "
+                "modern design, {style} style, {colors} gradients, "
+                "smooth transitions, Apple aesthetic, premium, "
+                "high quality, 4k, beautiful, elegant"
+            ),
+            "negative": (
+                "text, words, face, person, sharp edges, pixelated, "
+                "low quality, blurry, watermark, busy"
+            ),
+        },
+        "flux": (
+            "Abstract gradient mesh banner. Flowing curves. {colors}. "
+            "{style}. Modern, premium. Smooth depth layers. "
+            "No text. No faces."
+        ),
+        "tier": "pro",
+    },
+    "terminal_retro": {
+        "gemini": (
+            "Create a retro terminal/CRT screen aesthetic banner for a "
+            "{archetype_name}. Green-on-black or {colors} phosphor glow. "
+            "Matrix-style cascading symbols for: {top_skills}. "
+            "Style: {style}. Scanlines, CRT curve. 1584x396. No faces."
+        ),
+        "stable_diffusion": {
+            "positive": (
+                "retro CRT terminal, green phosphor glow, matrix rain, "
+                "hacker aesthetic, {style} style, {colors} on black, "
+                "scanlines, vintage computer, {top_skills} symbols, "
+                "high quality, 4k, atmospheric, moody"
+            ),
+            "negative": (
+                "face, person, modern UI, color photo, realistic, "
+                "low quality, blurry, watermark, bright colorful"
+            ),
+        },
+        "flux": (
+            "Retro CRT terminal banner. {colors} phosphor on black. "
+            "Matrix-style {top_skills} symbols. {style}. "
+            "Scanlines. Vintage. No faces."
+        ),
+        "tier": "pro",
+    },
+    "hexagonal_grid": {
+        "gemini": (
+            "Create a hexagonal grid/honeycomb pattern banner for a "
+            "{archetype_name}. Each hex cell contains an icon for: "
+            "{top_skills}. Color scheme: {colors}. Style: {style}. "
+            "Dark background, subtle glow. 1584x396. No text, no faces."
+        ),
+        "stable_diffusion": {
+            "positive": (
+                "hexagonal grid, honeycomb pattern, tech icons, "
+                "{style} style, {colors} palette, dark background, "
+                "subtle glow, {top_skills} icons in hexagons, "
+                "high quality, 4k, geometric, precise"
+            ),
+            "negative": (
+                "text, words, face, person, organic shapes, low quality, blurry, watermark, messy"
+            ),
+        },
+        "flux": (
+            "Hexagonal grid banner. Honeycomb with {top_skills} icons. "
+            "{colors}. {style}. Dark, glowing edges. "
+            "No text. No faces."
+        ),
+        "tier": "pro",
+    },
+    "data_flow": {
+        "gemini": (
+            "Create a data flow / pipeline visualization banner for a "
+            "{archetype_name}. Abstract data streams connecting nodes "
+            "representing: {top_skills}. Colors: {colors}. "
+            "Style: {style}. Network topology aesthetic. "
+            "1584x396. No text, no faces."
+        ),
+        "stable_diffusion": {
+            "positive": (
+                "data flow visualization, network nodes, pipeline art, "
+                "{style} style, {colors} data streams, dark background, "
+                "connecting lines, {top_skills} node icons, "
+                "high quality, 4k, technical, elegant"
+            ),
+            "negative": (
+                "text, words, face, person, chart labels, axis numbers, "
+                "low quality, blurry, watermark, simple"
+            ),
+        },
+        "flux": (
+            "Data flow pipeline banner. Network nodes for {top_skills}. "
+            "{colors} streams. {style}. Abstract topology. "
+            "No text. No faces."
+        ),
+        "tier": "pro",
+    },
+    "topographic": {
+        "gemini": (
+            "Create a topographic contour map style banner for a "
+            "{archetype_name}. Elevation lines form abstract shapes "
+            "suggesting: {top_skills}. Colors: {colors}. "
+            "Style: {style}. Geographic art meets tech. "
+            "1584x396. No text, no faces."
+        ),
+        "stable_diffusion": {
+            "positive": (
+                "topographic contour map, elevation lines, geographic art, "
+                "{style} style, {colors} lines on dark, "
+                "abstract landscape, {top_skills} terrain shapes, "
+                "high quality, 4k, detailed linework, elegant"
+            ),
+            "negative": (
+                "text, words, face, person, real photo, satellite, "
+                "low quality, blurry, watermark, colorful"
+            ),
+        },
+        "flux": (
+            "Topographic contour banner. Abstract elevation lines. "
+            "{colors} on dark. {top_skills} shapes. {style}. "
+            "Geographic. No text. No faces."
+        ),
+        "tier": "pro",
+    },
+    "blueprint": {
+        "gemini": (
+            "Create a technical blueprint style banner for a "
+            "{archetype_name}. White/light lines on blue grid background. "
+            "Schematics of: {top_skills}. Colors: {colors}. "
+            "Style: {style}. Engineering drawing aesthetic. "
+            "1584x396. No faces."
+        ),
+        "stable_diffusion": {
+            "positive": (
+                "technical blueprint, engineering drawing, white lines on blue, "
+                "{style} style, grid background, {colors} accents, "
+                "schematics for {top_skills}, design document, "
+                "high quality, 4k, precise, technical"
+            ),
+            "negative": (
+                "face, person, photo, realistic, messy handwriting, "
+                "low quality, blurry, watermark, colorful art"
+            ),
+        },
+        "flux": (
+            "Blueprint banner. White lines on blue grid. "
+            "{top_skills} schematics. {colors} accents. {style}. "
+            "Engineering drawing. No faces."
+        ),
+        "tier": "pro",
+    },
+    "particle_wave": {
+        "gemini": (
+            "Create a particle wave / audio waveform inspired banner for a "
+            "{archetype_name}. Dynamic particles forming waves that represent: "
+            "{top_skills}. Colors: {colors}. Style: {style}. "
+            "Motion blur, energy visualization. 1584x396. No text, no faces."
+        ),
+        "stable_diffusion": {
+            "positive": (
+                "particle wave, audio waveform art, dynamic particles, "
+                "{style} style, {colors} particle glow, dark background, "
+                "energy visualization, {top_skills} wave patterns, "
+                "high quality, 4k, motion blur, vivid"
+            ),
+            "negative": (
+                "text, words, face, person, static, flat, low quality, blurry, watermark, simple"
+            ),
+        },
+        "flux": (
+            "Particle wave banner. Dynamic energy particles. "
+            "{colors} glow. {top_skills} wave patterns. {style}. "
+            "Motion. Dark background. No text. No faces."
+        ),
+        "tier": "pro",
     },
 }
+
+# Template tier classification
+FREE_TEMPLATES = {k for k, v in IMAGE_TEMPLATES.items() if v.get("tier") == "free"}
+PRO_TEMPLATES = {k for k, v in IMAGE_TEMPLATES.items() if v.get("tier") == "pro"}
+ALL_TEMPLATES = FREE_TEMPLATES | PRO_TEMPLATES
 
 
 class PromptOrchestrator:
@@ -245,3 +588,41 @@ class PromptOrchestrator:
             style=style,
             colors=color_str,
         )
+
+    @staticmethod
+    def get_available_templates(tier: str = "free") -> list[str]:
+        """Get template IDs available for a given tier.
+
+        Args:
+            tier: 'free', 'pro', or 'enterprise'
+
+        Returns:
+            List of available template IDs.
+        """
+        if tier in ("pro", "enterprise"):
+            return sorted(ALL_TEMPLATES)
+        return sorted(FREE_TEMPLATES)
+
+    @staticmethod
+    def get_available_readme_styles(tier: str = "free") -> list[str]:
+        """Get README style names available for a given tier."""
+        if tier in ("pro", "enterprise"):
+            return sorted(README_TEMPLATES.keys())
+        return [
+            k for k in sorted(README_TEMPLATES.keys()) if README_TEMPLATES[k].get("tier") == "free"
+        ]
+
+    @staticmethod
+    def is_template_allowed(template_id: str, tier: str) -> bool:
+        """Check if a template is allowed for the given tier."""
+        if tier in ("pro", "enterprise"):
+            return template_id in ALL_TEMPLATES
+        return template_id in FREE_TEMPLATES
+
+    @staticmethod
+    def is_readme_style_allowed(style: str, tier: str) -> bool:
+        """Check if a README style is allowed for the given tier."""
+        if tier in ("pro", "enterprise"):
+            return style in README_TEMPLATES
+        template = README_TEMPLATES.get(style)
+        return template is not None and template.get("tier") == "free"
