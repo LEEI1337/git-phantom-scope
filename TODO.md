@@ -33,27 +33,43 @@
 - [x] Generate API testing (6 tests)
 - [x] 188 total tests passing (72 new Phase 4 tests)
 
-## Up Next (Phase 5: BYOK & Pro)
+## Completed (Phase 5)
 
-- [ ] Client-side AES-256 key encryption
-- [ ] Gemini Imagen live integration testing
-- [ ] OpenAI DALL-E 3 connector testing
-- [ ] Stable Diffusion + FLUX.1 connectors
-- [ ] Pro tier templates & custom styles
-- [ ] Stripe payment integration
-- [ ] MLflow prompt versioning
+- [x] AES-256-GCM BYOK key encryption/decryption (byok_crypto.py)
+- [x] StableDiffusionConnector (Automatic1111 WebUI API)
+- [x] FluxConnector (Replicate + fal.ai, schnell/dev variants)
+- [x] 13 image templates (3 free + 10 pro) with gemini/SD/flux prompts
+- [x] 5 README styles (2 free + 3 pro) with tier classification
+- [x] MLflow prompt versioning tracker (prompt_tracker.py)
+- [x] Stripe payment integration with webhook verification (stripe_service.py)
+- [x] Tier features: free/pro/enterprise with provider & template gating
+- [x] BYOK crypto tests (16 tests)
+- [x] SD + FLUX connector tests (16 tests)
+- [x] Pro tier template tests (16 tests)
+- [x] MLflow tracker tests (17 tests)
+- [x] Stripe service tests (25 tests)
+- [x] Prompt orchestrator expanded tests (4 tests)
+- [x] 301 total tests passing (113 new Phase 5 tests)
+
+## Up Next (Phase 6: Enterprise)
+
+- [ ] White-label configuration
+- [ ] Team/org analytics dashboard
+- [ ] Insights API (aggregated data products)
+- [ ] Premium PDF reports
+- [ ] SSO/SAML support
+- [ ] Kubernetes deployment configs
 
 ## Backlog
 
 - [ ] Frontend: /explore page with results visualization
 - [ ] Frontend: /insights page with Recharts dashboard
-- [ ] Gemini Imagen integration & testing
-- [ ] OpenAI DALL-E 3 connector
-- [ ] Stripe payment integration
-- [ ] MLflow experiment tracking setup
+- [ ] Gemini Imagen live integration testing
+- [ ] OpenAI DALL-E 3 connector live testing
 - [ ] E2E tests with Playwright
 - [ ] Kubernetes manifests (infra/k8s/)
 - [ ] API documentation site (docs/)
+- [ ] Performance optimization & load testing
 
 ---
 

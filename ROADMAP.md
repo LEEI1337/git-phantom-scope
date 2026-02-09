@@ -49,16 +49,18 @@
 - [x] Image generator + asset storage + API tests (27 tests)
 - [x] 188 total tests passing (72 new Phase 4 tests)
 
-## Phase 5: BYOK & Pro (Weeks 9-16)
+## Phase 5: BYOK & Pro (Weeks 9-16) - COMPLETE
 
-- [ ] Client-side AES-256 key encryption
-- [ ] OpenAI DALL-E 3 connector
-- [ ] Stable Diffusion connector (self-hosted)
-- [ ] FLUX.1 connector
-- [ ] Pro tier templates (10+)
-- [ ] Custom styles & colors
-- [ ] MLflow prompt versioning
-- [ ] Stripe payment integration
+- [x] Client-side AES-256-GCM key encryption (byok_crypto.py)
+- [x] Stable Diffusion connector — self-hosted Automatic1111 API
+- [x] FLUX.1 connector — Replicate + fal.ai (schnell/dev variants)
+- [x] Pro tier templates (13 image + 5 README with tier gating)
+- [x] Custom styles & colors support in prompts
+- [x] MLflow prompt versioning (prompt_tracker.py)
+- [x] Stripe payment integration (stripe_service.py)
+- [x] Tier features system (free/pro/enterprise)
+- [x] BYOK crypto, connector, template, tracker & Stripe tests
+- [x] 301 total tests passing (113 new Phase 5 tests)
 
 ## Phase 6: Enterprise (Weeks 17-24)
 
