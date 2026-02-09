@@ -17,19 +17,34 @@
 - [x] Scoring tests >90% coverage (achieved 99%)
 - [x] Analytics pipeline service (AnalyticsPipeline)
 
-## Up Next (Phase 4: Image Generation)
+## Completed (Phase 4)
 
-- [ ] Gemini Imagen integration (free tier)
-- [ ] Prompt orchestrator testing
-- [ ] Template system (portfolio banner, skill wheel)
-- [ ] Watermark service (PIL-based)
-- [ ] ZIP packaging & download flow
-- [ ] MVP Launch
+- [x] Celery worker for async generation jobs (celery_worker.py)
+- [x] Image generator pipeline (image_generator.py)
+- [x] PIL-based watermark & text overlay implementation (packager.py)
+- [x] Asset storage service with auto-cleanup (asset_storage.py)
+- [x] Generate API endpoint wired with Celery dispatch
+- [x] Download endpoint for completed ZIP packages
+- [x] Prompt orchestrator testing (15 tests)
+- [x] Packager/renderer testing (18 tests)
+- [x] Image generator testing (12 tests)
+- [x] Asset storage testing (9 tests)
+- [x] Model connector testing (8 tests)
+- [x] Generate API testing (6 tests)
+- [x] 188 total tests passing (72 new Phase 4 tests)
+
+## Up Next (Phase 5: BYOK & Pro)
+
+- [ ] Client-side AES-256 key encryption
+- [ ] Gemini Imagen live integration testing
+- [ ] OpenAI DALL-E 3 connector testing
+- [ ] Stable Diffusion + FLUX.1 connectors
+- [ ] Pro tier templates & custom styles
+- [ ] Stripe payment integration
+- [ ] MLflow prompt versioning
 
 ## Backlog
 
-- [ ] PIL-based watermark implementation
-- [ ] Celery worker for async generation jobs
 - [ ] Frontend: /explore page with results visualization
 - [ ] Frontend: /insights page with Recharts dashboard
 - [ ] Gemini Imagen integration & testing
@@ -42,4 +57,4 @@
 
 ---
 
-Last updated: 2026-02-18
+Last updated: 2026-02-19

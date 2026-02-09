@@ -2,6 +2,7 @@
 
 POST /api/v1/public/generate - Start profile package generation
 GET  /api/v1/public/generate/{job_id} - Check generation status
+GET  /api/v1/public/generate/{job_id}/download - Download generated package
 """
 
 from __future__ import annotations
@@ -11,12 +12,13 @@ import uuid
 
 import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, Path
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from api.deps import rate_limit_generate
 from app.config import get_settings
 from app.dependencies import get_redis
-from app.exceptions import SessionNotFoundError
+from app.exceptions import GenerationError, SessionNotFoundError
 from app.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -103,8 +105,10 @@ async def generate_profile_package(
         json.dumps(job_data),
     )
 
-    # TODO: Queue Celery task for actual generation
-    # For MVP, we'll process synchronously or return queued status
+    # Dispatch Celery task for background generation
+    from app.celery_worker import generate_profile_package
+
+    generate_profile_package.delay(job_id=job_id, session_id=request.session_id)
 
     logger.info("generation_job_created", job_id=job_id, assets=request.assets)
 
@@ -140,4 +144,48 @@ async def get_generation_status(
         expires_at=job.get("expires_at"),
         assets=job.get("completed_assets"),
         meta={"request_id": job["job_id"]},
+    )
+
+
+@router.get("/generate/{job_id}/download")
+async def download_generated_package(
+    job_id: str = Path(..., description="Generation job ID"),
+    redis: aioredis.Redis = Depends(get_redis),
+) -> Response:
+    """Download the generated profile package ZIP.
+
+    Returns the ZIP file if generation is complete.
+    Returns 404 if job not found or asset expired.
+    Returns 409 if generation is still in progress.
+    """
+    # Verify job exists and is completed
+    job_data = await redis.get(f"job:{job_id}")
+    if not job_data:
+        raise SessionNotFoundError()
+
+    job = json.loads(job_data)
+
+    if job.get("status") != "completed":
+        raise GenerationError(
+            f"Generation not complete. Current status: {job.get('status', 'unknown')}"
+        )
+
+    # Retrieve asset from storage
+    from services.asset_storage import AssetStorage
+
+    storage = AssetStorage()
+    asset_bytes = await storage.retrieve(job_id)
+
+    if not asset_bytes:
+        raise GenerationError("Generated package has expired or was not found")
+
+    logger.info("package_downloaded", job_id=job_id)
+
+    return Response(
+        content=asset_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="git-phantom-scope-{job_id[:8]}.zip"',
+            "Cache-Control": "no-store",
+        },
     )

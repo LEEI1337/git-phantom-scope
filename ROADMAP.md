@@ -36,14 +36,18 @@
 - [x] Scoring unit tests (>90% coverage - achieved 99%)
 - [x] Anonymous analytics pipeline to PostgreSQL
 
-## Phase 4: Image Generation (Weeks 7-8)
+## Phase 4: Image Generation (Weeks 7-8) - COMPLETE
 
-- [ ] Gemini Imagen integration (free tier)
-- [ ] Prompt orchestrator testing
-- [ ] Template system (portfolio banner, skill wheel)
-- [ ] Watermark service (PIL-based)
-- [ ] ZIP packaging & download flow
-- [ ] MVP Launch
+- [x] Celery worker for async generation jobs
+- [x] Image generator pipeline (orchestrator → connector → renderer → packager → storage)
+- [x] PIL-based watermark & text overlay (tier-based opacity)
+- [x] Asset storage service with auto-cleanup (4h TTL)
+- [x] Generate API with Celery dispatch + download endpoint
+- [x] Prompt orchestrator testing (15 tests)
+- [x] Packager/renderer testing (18 tests)
+- [x] Model connector testing (8 tests)
+- [x] Image generator + asset storage + API tests (27 tests)
+- [x] 188 total tests passing (72 new Phase 4 tests)
 
 ## Phase 5: BYOK & Pro (Weeks 9-16)
 
@@ -68,4 +72,4 @@
 
 ---
 
-Last updated: 2026-02-18
+Last updated: 2026-02-19
